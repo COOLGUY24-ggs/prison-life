@@ -1,0 +1,470 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Prison Hub | Advanced Combat & ESP",
+    LoadingTitle = "Loading Hub...",
+    LoadingSubtitle = "by Luaroblox_helper",
+    ConfigurationSaving = {
+        Enabled = false,
+    },
+    KeySystem = false,
+})
+
+local Tab = Window:CreateTab("Main", 4483362458)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local AimlockEnabled = false
+local TeamCheckEnabled = true
+local ESPEnabled = false
+local FOVRadius = 500
+local DashDistance = 10
+local GlitchDistance = 10
+local MaxAimlockDistance = 300
+
+-- Alleen cooldown voor de Glitch-knop (max 1x per 2 seconden)
+local lastGlitchTime = 0
+local CooldownTime = 2.0
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false
+fovCircle.Radius = FOVRadius
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Thickness = 1
+fovCircle.Filled = false
+fovCircle.Transparency = 0.7
+
+Tab:CreateToggle({
+    Name = "Aimlock Muis Cirkel (FOV)",
+    CurrentValue = false,
+    Flag = "AimlockToggle",
+    Callback = function(Value)
+        AimlockEnabled = Value
+        fovCircle.Visible = Value
+    end,
+})
+
+Tab:CreateToggle({
+    Name = "Team Check (Slimme Rank Filter)",
+    CurrentValue = true,
+    Flag = "TeamCheckToggle",
+    Callback = function(Value)
+        TeamCheckEnabled = Value
+    end,
+})
+
+Tab:CreateSlider({
+    Name = "Cirkel Grootte",
+    Range = {100, 2000},
+    Increment = 25,
+    Suffix = "px",
+    CurrentValue = 500,
+    Flag = "FOVRadius",
+    Callback = function(Value)
+        FOVRadius = Value
+        fovCircle.Radius = Value
+    end,
+})
+
+Tab:CreateSlider({
+    Name = "Dash Afstand (Studs)",
+    Range = {5, 20},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 10,
+    Flag = "DashDistanceSlider",
+    Callback = function(Value)
+        DashDistance = Value
+    end,
+})
+
+Tab:CreateSlider({
+    Name = "Glitch Afstand (Studs)",
+    Range = {5, 20},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = 10,
+    Flag = "GlitchDistanceSlider",
+    Callback = function(Value)
+        GlitchDistance = Value
+    end,
+})
+
+Tab:CreateToggle({
+    Name = "Team ESP (Criminals/Guards/Inmates)",
+    CurrentValue = false,
+    Flag = "ESPToggle",
+    Callback = function(Value)
+        ESPEnabled = Value
+        if not Value then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player.Character then
+                    if player.Character:FindFirstChild("TeamHighlight") then
+                        player.Character.TeamHighlight:Destroy()
+                    end
+                    if player.Character:FindFirstChild("Head") and player.Character.Head:FindFirstChild("WeaponTag") then
+                        player.Character.Head.WeaponTag:Destroy()
+                    end
+                end
+            end
+        end
+    end,
+})
+
+-- Dash GUI Setup
+local DashGui = Instance.new("ScreenGui")
+DashGui.Name = "PrisonHubDashGui"
+DashGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+DashGui.Enabled = false
+
+local DashButton = Instance.new("TextButton")
+DashButton.Name = "DashButton"
+DashButton.Size = UDim2.new(0, 90, 0, 90)
+DashButton.Position = UDim2.new(0.8, 0, 0.6, 0)
+DashButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DashButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DashButton.TextSize = 18
+DashButton.Font = Enum.Font.SourceSansBold
+DashButton.Text = "DASH"
+DashButton.Parent = DashGui
+
+local UICornerDash = Instance.new("UICorner")
+UICornerDash.CornerRadius = UDim.new(1, 0)
+UICornerDash.Parent = DashButton
+
+local UIStrokeDash = Instance.new("UIStroke")
+UIStrokeDash.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeDash.Thickness = 2
+UIStrokeDash.Parent = DashButton
+
+Tab:CreateToggle({
+    Name = "Mobiele/Verplaatsbare Dash Knop",
+    CurrentValue = false,
+    Flag = "DashButtonToggle",
+    Callback = function(Value)
+        DashGui.Enabled = Value
+    end,
+})
+
+-- Glitch GUI Setup
+local GlitchGui = Instance.new("ScreenGui")
+GlitchGui.Name = "PrisonHubGlitchGui"
+GlitchGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+GlitchGui.Enabled = false
+
+local GlitchButton = Instance.new("TextButton")
+GlitchButton.Name = "GlitchButton"
+GlitchButton.Size = UDim2.new(0, 90, 0, 90)
+GlitchButton.Position = UDim2.new(0.65, 0, 0.6, 0)
+GlitchButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+GlitchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+GlitchButton.TextSize = 18
+GlitchButton.Font = Enum.Font.SourceSansBold
+GlitchButton.Text = "GLITCH"
+GlitchButton.Parent = GlitchGui
+
+local UICornerGlitch = Instance.new("UICorner")
+UICornerGlitch.CornerRadius = UDim.new(1, 0)
+UICornerGlitch.Parent = GlitchButton
+
+local UIStrokeGlitch = Instance.new("UIStroke")
+UIStrokeGlitch.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeGlitch.Thickness = 2
+UIStrokeGlitch.Parent = GlitchButton
+
+Tab:CreateToggle({
+    Name = "Mobiele/Verplaatsbare Glitch Knop",
+    CurrentValue = false,
+    Flag = "GlitchButtonToggle",
+    Callback = function(Value)
+        GlitchGui.Enabled = Value
+    end,
+})
+
+-- Dragging logic for Dash Button
+local draggingDash, dragInputDash, dragStartDash, startPosDash
+DashButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingDash = true
+        dragStartDash = input.Position
+        startPosDash = DashButton.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingDash = false
+            end
+        end)
+    end
+end)
+
+DashButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInputDash = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInputDash and draggingDash then
+        local delta = input.Position - dragStartDash
+        DashButton.Position = UDim2.new(
+            startPosDash.X.Scale, 
+            startPosDash.X.Offset + delta.X, 
+            startPosDash.Y.Scale, 
+            startPosDash.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Dragging logic for Glitch Button
+local draggingGlitch, dragInputGlitch, dragStartGlitch, startPosGlitch
+GlitchButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingGlitch = true
+        dragStartGlitch = input.Position
+        startPosGlitch = GlitchButton.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingGlitch = false
+            end
+        end)
+    end
+end)
+
+GlitchButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInputGlitch = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInputGlitch and draggingGlitch then
+        local delta = input.Position - dragStartGlitch
+        GlitchButton.Position = UDim2.new(
+            startPosGlitch.X.Scale, 
+            startPosGlitch.X.Offset + delta.X, 
+            startPosGlitch.Y.Scale, 
+            startPosGlitch.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Dash execution function (zonder cooldown)
+local isDashing = false
+DashButton.MouseButton1Click:Connect(function()
+    if isDashing then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    isDashing = true
+    local targetCFrame = rootPart.CFrame + (rootPart.CFrame.LookVector * DashDistance)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
+    
+    tween:Play()
+    tween.Completed:Connect(function()
+        isDashing = false
+    end)
+end)
+
+-- Glitch execution function met 2 seconden cooldown
+local isGlitching = false
+GlitchButton.MouseButton1Click:Connect(function()
+    if isGlitching then return end
+    local currentTime = tick()
+    if currentTime - lastGlitchTime < CooldownTime then return end
+    
+    local char = LocalPlayer.Character
+    if not char then return end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    isGlitching = true
+    lastGlitchTime = currentTime
+    local targetCFrame = rootPart.CFrame + Vector3.new(0, GlitchDistance, 0)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
+    
+    tween:Play()
+    tween.Completed:Connect(function()
+        isGlitching = false
+    end)
+end)
+
+local function IsVisible(targetPart)
+    if not targetPart then return false end
+    local origin = Camera.CFrame.Position
+    local direction = (targetPart.Position - origin)
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    
+    local result = Workspace:Raycast(origin, direction, raycastParams)
+    if result then
+        local hitInstance = result.Instance
+        if hitInstance:IsDescendantOf(targetPart.Parent) then
+            return true
+        end
+        return false
+    end
+    return true
+end
+
+local function GetEquippedWeaponName(player)
+    if not player.Character then return nil end
+    local tool = player.Character:FindFirstChildOfClass("Tool")
+    if tool then
+        return tool.Name
+    end
+    return nil
+end
+
+local function IsAlive(player)
+    if not player.Character then return false end
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return false end
+    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return false end
+    return true
+end
+
+local function CanTargetByRank(localPlayer, targetPlayer)
+    if not TeamCheckEnabled then return true end
+    
+    local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
+    local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
+    
+    if localTeam ~= "" and localTeam == targetTeam then
+        return false
+    end
+    
+    if localTeam:find("criminal") then
+        if targetTeam:find("inmate") then
+            return false
+        end
+    end
+    
+    if localTeam:find("guard") and targetTeam:find("inmate") then
+        if GetEquippedWeaponName(targetPlayer) == nil then
+            return false
+        end
+    end
+    
+    return true
+end
+
+RunService.RenderStepped:Connect(function()
+    local mousePos = UserInputService:GetMouseLocation()
+    fovCircle.Position = mousePos
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local char = player.Character
+            local head = char:FindFirstChild("Head")
+            local highlight = char:FindFirstChild("TeamHighlight")
+            local weaponName = GetEquippedWeaponName(player)
+            local teamName = player.Team and player.Team.Name or ""
+            local isCriminal = teamName:lower():find("criminal") ~= nil
+            
+            if ESPEnabled and IsAlive(player) then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "TeamHighlight"
+                    highlight.Adornee = char
+                    highlight.Parent = char
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+                
+                if isCriminal then
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                elseif teamName:lower():find("guard") then
+                    highlight.FillColor = Color3.fromRGB(0, 0, 255)
+                elseif teamName:lower():find("inmate") then
+                    highlight.FillColor = Color3.fromRGB(255, 165, 0)
+                else
+                    highlight.FillColor = Color3.fromRGB(255, 255, 255)
+                end
+
+                if head then
+                    local billboard = head:FindFirstChild("WeaponTag")
+                    if weaponName and not isCriminal then
+                        if not billboard then
+                            billboard = Instance.new("BillboardGui")
+                            billboard.Name = "WeaponTag"
+                            billboard.Size = UDim2.new(0, 200, 0, 50)
+                            billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                            billboard.AlwaysOnTop = true
+                            billboard.Parent = head
+
+                            local textLabel = Instance.new("TextLabel")
+                            textLabel.Name = "Text"
+                            textLabel.Size = UDim2.new(1, 0, 1, 0)
+                            textLabel.BackgroundTransparency = 1
+                            textLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+                            textLabel.TextStrokeTransparency = 0
+                            textLabel.TextSize = 14
+                            textLabel.Font = Enum.Font.SourceSansBold
+                            textLabel.Parent = billboard
+                        end
+                        billboard.Text.Text = "Wapen: " .. weaponName
+                        billboard.Enabled = true
+                    else
+                        if billboard then
+                            billboard.Enabled = false
+                        end
+                    end
+                end
+            else
+                if highlight then
+                    highlight:Destroy()
+                end
+                if head and head:FindFirstChild("WeaponTag") then
+                    head.WeaponTag:Destroy()
+                end
+            end
+        end
+    end
+
+    if AimlockEnabled then
+        local closestPlayer = nil
+        local shortestDistance = FOVRadius
+        local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
+                if CanTargetByRank(LocalPlayer, player) then
+                    local head = player.Character.Head
+                    
+                    if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
+                        local targetRootPart = player.Character.HumanoidRootPart
+                        local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
+                        if distanceInStuds <= MaxAimlockDistance then
+                            if IsVisible(head) then
+                                local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
+                                if onScreen then
+                                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
+                                    if distance < shortestDistance then
+                                        shortestDistance = distance
+                                        closestPlayer = player
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character.Head.Position)
+        end
+    end
+end)
