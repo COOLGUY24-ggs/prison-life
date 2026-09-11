@@ -17,6 +17,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
@@ -28,7 +29,6 @@ local DashDistance = 10
 local GlitchDistance = 10
 local MaxAimlockDistance = 300
 
--- Alleen cooldown voor de Glitch-knop (max 1x per 2 seconden)
 local lastGlitchTime = 0
 local CooldownTime = 2.0
 
@@ -41,7 +41,7 @@ fovCircle.Filled = false
 fovCircle.Transparency = 0.7
 
 Tab:CreateToggle({
-    Name = "Aimlock Muis Cirkel (FOV)",
+    Name = "Aimlock Mouse Circle (FOV)",
     CurrentValue = false,
     Flag = "AimlockToggle",
     Callback = function(Value)
@@ -51,7 +51,7 @@ Tab:CreateToggle({
 })
 
 Tab:CreateToggle({
-    Name = "Team Check (Slimme Rank Filter)",
+    Name = "Team Check (Smart Rank Filter)",
     CurrentValue = true,
     Flag = "TeamCheckToggle",
     Callback = function(Value)
@@ -60,7 +60,7 @@ Tab:CreateToggle({
 })
 
 Tab:CreateSlider({
-    Name = "Cirkel Grootte",
+    Name = "Circle Size",
     Range = {100, 2000},
     Increment = 25,
     Suffix = "px",
@@ -73,7 +73,7 @@ Tab:CreateSlider({
 })
 
 Tab:CreateSlider({
-    Name = "Dash Afstand (Studs)",
+    Name = "Dash Distance (Studs)",
     Range = {5, 20},
     Increment = 1,
     Suffix = " studs",
@@ -85,7 +85,7 @@ Tab:CreateSlider({
 })
 
 Tab:CreateSlider({
-    Name = "Glitch Afstand (Studs)",
+    Name = "Glitch Distance (Studs)",
     Range = {5, 20},
     Increment = 1,
     Suffix = " studs",
@@ -144,7 +144,7 @@ UIStrokeDash.Thickness = 2
 UIStrokeDash.Parent = DashButton
 
 Tab:CreateToggle({
-    Name = "Mobiele/Verplaatsbare Dash Knop",
+    Name = "Mobile/Movable Dash Button",
     CurrentValue = false,
     Flag = "DashButtonToggle",
     Callback = function(Value)
@@ -179,7 +179,7 @@ UIStrokeGlitch.Thickness = 2
 UIStrokeGlitch.Parent = GlitchButton
 
 Tab:CreateToggle({
-    Name = "Mobiele/Verplaatsbare Glitch Knop",
+    Name = "Mobile/Movable Glitch Button",
     CurrentValue = false,
     Flag = "GlitchButtonToggle",
     Callback = function(Value)
@@ -255,7 +255,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Dash execution function (zonder cooldown)
+-- Dash execution function
 local isDashing = false
 DashButton.MouseButton1Click:Connect(function()
     if isDashing then return end
@@ -275,7 +275,7 @@ DashButton.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Glitch execution function met 2 seconden cooldown
+-- Glitch execution function
 local isGlitching = false
 GlitchButton.MouseButton1Click:Connect(function()
     if isGlitching then return end
@@ -320,9 +320,10 @@ end
 
 local function GetEquippedWeaponName(player)
     if not player.Character then return nil end
-    local tool = player.Character:FindFirstChildOfClass("Tool")
-    if tool then
-        return tool.Name
+    for _, item in ipairs(player.Character:GetChildren()) do
+        if item:IsA("Tool") and item.Name ~= "BreakFast" then
+            return item.Name
+        end
     end
     return nil
 end
@@ -365,6 +366,8 @@ RunService.RenderStepped:Connect(function()
     local mousePos = UserInputService:GetMouseLocation()
     fovCircle.Position = mousePos
 
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             local char = player.Character
@@ -373,7 +376,7 @@ RunService.RenderStepped:Connect(function()
             local weaponName = GetEquippedWeaponName(player)
             local teamName = player.Team and player.Team.Name or ""
             local isCriminal = teamName:lower():find("criminal") ~= nil
-            
+
             if ESPEnabled and IsAlive(player) then
                 if not highlight then
                     highlight = Instance.new("Highlight")
@@ -414,7 +417,7 @@ RunService.RenderStepped:Connect(function()
                             textLabel.Font = Enum.Font.SourceSansBold
                             textLabel.Parent = billboard
                         end
-                        billboard.Text.Text = "Wapen: " .. weaponName
+                        billboard.Text.Text = "Weapon: " .. weaponName
                         billboard.Enabled = true
                     else
                         if billboard then
@@ -436,7 +439,6 @@ RunService.RenderStepped:Connect(function()
     if AimlockEnabled then
         local closestPlayer = nil
         local shortestDistance = FOVRadius
-        local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
