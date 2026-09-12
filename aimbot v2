@@ -31,11 +31,14 @@ local ESPEnabled = false
 local AutoMeleeEnabled = false
 local AutoShootEnabled = false
 local AutoWeaponsEnabled = false
+local JoystickFlyEnabled = false
+local FlySpeed = 50
 local FOVRadius = 500
 local DashDistance = 10
 local GlitchDistance = 10
 local MaxAimlockDistance = 300
 
+local flyConnection = nil
 local lastGlitchTime = 0
 local CooldownTime = 2.0
 local isTaserOrArresting = false
@@ -47,6 +50,33 @@ fovCircle.Color = Color3.fromRGB(255, 255, 255)
 fovCircle.Thickness = 1
 fovCircle.Filled = false
 fovCircle.Transparency = 0.7
+
+local function GetCurrentVehiclePart()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.SeatPart then
+        return humanoid.SeatPart
+    end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        for _, child in ipairs(rootPart:GetChildren()) do
+            if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+                local part0 = child.Part0
+                local part1 = child.Part1
+                local otherPart = (part0 == rootPart) and part1 or part0
+                if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
+                    return otherPart
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function IsInVehicle()
+    return GetCurrentVehiclePart() ~= nil
+end
 
 -- ==================== MAIN TAB ====================
 MainTab:CreateToggle({
@@ -106,6 +136,106 @@ CombatTab:CreateToggle({
     Flag = "AutoShoot45Flag",
     Callback = function(Value)
         AutoShootEnabled = Value
+    end,
+})
+
+CombatTab:CreateToggle({
+    Name = "Vehicle Fly (Look to Fly Up/Down)",
+    CurrentValue = false,
+    Flag = "JoystickFlyToggle",
+    Callback = function(Value)
+        JoystickFlyEnabled = Value
+        
+        if JoystickFlyEnabled then
+            if flyConnection then
+                flyConnection:Disconnect()
+                flyConnection = nil
+            end
+            
+            flyConnection = RunService.RenderStepped:Connect(function()
+                if not JoystickFlyEnabled then return end
+                
+                local vehiclePart = GetCurrentVehiclePart()
+                if vehiclePart then
+                    local vehicleModel = vehiclePart.Parent
+                    local primaryPart = nil
+                    
+                    if vehicleModel:IsA("Model") then
+                        primaryPart = vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")
+                    end
+                    if not primaryPart then
+                        primaryPart = vehiclePart
+                    end
+                    
+                    if not primaryPart:FindFirstChild("FlyBodyVelocity") then
+                        local bv = Instance.new("BodyVelocity")
+                        bv.Name = "FlyBodyVelocity"
+                        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                        bv.Velocity = Vector3.new(0, 0, 0)
+                        bv.Parent = primaryPart
+                        
+                        local bg = Instance.new("BodyGyro")
+                        bg.Name = "FlyBodyGyro"
+                        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                        bg.CFrame = primaryPart.CFrame
+                        bg.Parent = primaryPart
+                    end
+                    
+                    local bv = primaryPart:FindFirstChild("FlyBodyVelocity")
+                    local bg = primaryPart:FindFirstChild("FlyBodyGyro")
+                    
+                    if bv and bg then
+                        local camCFrame = Camera.CFrame
+                        bg.CFrame = camCFrame
+                        
+                        local velocity = Vector3.new(0, 0, 0)
+                        local char = LocalPlayer.Character
+                        local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+                        
+                        if humanoid then
+                            local moveDirection = humanoid.MoveDirection
+                            if moveDirection.Magnitude > 0 then
+                                -- Volledige 3D beweging op basis van waar de camera naartoe kijkt (inclusief omhoog/omlaag)
+                                local localMove = (camCFrame.RightVector * (moveDirection:Dot(camCFrame.RightVector))) + (camCFrame.LookVector * (moveDirection:Dot(camCFrame.LookVector)))
+                                if localMove.Magnitude > 0 then
+                                    velocity = localMove.Unit * FlySpeed
+                                end
+                            end
+                        end
+                        
+                        bv.Velocity = velocity
+                    end
+                else
+                    for _, p in ipairs(Workspace:GetDescendants()) do
+                        if p:IsA("BasePart") and (p.Name == "FlyBodyVelocity" or p.Name == "FlyBodyGyro") then
+                            p:Destroy()
+                        end
+                    end
+                end
+            end)
+        else
+            if flyConnection then
+                flyConnection:Disconnect()
+                flyConnection = nil
+            end
+            for _, p in ipairs(Workspace:GetDescendants()) do
+                if p:IsA("BasePart") and (p.Name == "FlyBodyVelocity" or p.Name == "FlyBodyGyro") then
+                    p:Destroy()
+                end
+            end
+        end
+    end,
+})
+
+CombatTab:CreateSlider({
+    Name = "Fly Speed",
+    Range = {16, 150},
+    Increment = 5,
+    Suffix = " studs/s",
+    CurrentValue = 50,
+    Flag = "FlySpeedSlider",
+    Callback = function(Value)
+        FlySpeed = Value
     end,
 })
 
@@ -193,8 +323,8 @@ local DashButton = Instance.new("TextButton")
 DashButton.Name = "DashButton"
 DashButton.Size = UDim2.new(0, 90, 0, 90)
 DashButton.Position = UDim2.new(0.8, 0, 0.6, 0)
-DashButton.BackgroundColor3 = Color3.fromRGB(240, 240, 240) -- Lichtgrijze achtergrond voor maximaal contrast
-DashButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Zwarte tekst
+DashButton.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+DashButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 DashButton.TextSize = 20
 DashButton.Font = Enum.Font.SourceSansBold
 DashButton.Text = "DASH"
@@ -219,8 +349,8 @@ local GlitchButton = Instance.new("TextButton")
 GlitchButton.Name = "GlitchButton"
 GlitchButton.Size = UDim2.new(0, 90, 0, 90)
 GlitchButton.Position = UDim2.new(0.65, 0, 0.6, 0)
-GlitchButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100) -- Helderrode achtergrond
-GlitchButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Zwarte tekst
+GlitchButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+GlitchButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 GlitchButton.TextSize = 20
 GlitchButton.Font = Enum.Font.SourceSansBold
 GlitchButton.Text = "GLITCH"
@@ -245,8 +375,8 @@ local TaserButton = Instance.new("TextButton")
 TaserButton.Name = "TaserButton"
 TaserButton.Size = UDim2.new(0, 90, 0, 90)
 TaserButton.Position = UDim2.new(0.5, 0, 0.6, 0)
-TaserButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255) -- Helderblauwe achtergrond
-TaserButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Zwarte tekst
+TaserButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+TaserButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 TaserButton.TextSize = 20
 TaserButton.Font = Enum.Font.SourceSansBold
 TaserButton.Text = "TASER"
@@ -327,7 +457,7 @@ end)
 -- Dash execution function
 local isDashing = false
 DashButton.MouseButton1Click:Connect(function()
-    if isDashing then return end
+    if isDashing or IsInVehicle() then return end
     local char = LocalPlayer.Character
     if not char then return end
     local rootPart = char:FindFirstChild("HumanoidRootPart")
@@ -347,7 +477,7 @@ end)
 -- Glitch execution function
 local isGlitching = false
 GlitchButton.MouseButton1Click:Connect(function()
-    if isGlitching then return end
+    if isGlitching or IsInVehicle() then return end
     local currentTime = tick()
     if currentTime - lastGlitchTime < CooldownTime then return end
     
@@ -368,16 +498,6 @@ GlitchButton.MouseButton1Click:Connect(function()
     end)
 end)
 
-local function IsInVehicle()
-    local char = LocalPlayer.Character
-    if not char then return false end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if humanoid and humanoid.SeatPart then
-        return true
-    end
-    return false
-end
-
 local function IsAlive(player)
     if not player.Character then return false end
     local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
@@ -387,21 +507,16 @@ local function IsAlive(player)
     return true
 end
 
--- Simpele Team Check (alleen kijken of ze in een ander team zitten indien ingeschakeld)
 local function CanTargetByRankSimple(localPlayer, targetPlayer)
     if not TeamCheckEnabled then return true end
-    
     local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
     local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
-    
     if localTeam ~= "" and localTeam == targetTeam then
         return false
     end
-    
     return true
 end
 
--- Uitgebreide Team Check voor Auto Shoot (met wapens/items checks)
 local function GetEquippedWeaponName(player)
     if not player.Character then return nil end
     for _, item in ipairs(player.Character:GetChildren()) do
@@ -430,40 +545,26 @@ end
 
 local function CanTargetByRankFull(localPlayer, targetPlayer)
     if not TeamCheckEnabled then return true end
-    
     local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
     local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
-    
     if localTeam ~= "" and localTeam == targetTeam then
         return false
     end
-    
-    if localTeam:find("criminal") then
-        if targetTeam:find("inmate") then
-            return false
-        end
+    if localTeam:find("criminal") and targetTeam:find("inmate") then
+        return false
     end
-    
-    if targetTeam:find("inmate") then
-        if HasIgnoredItem(targetPlayer) then
-            return false
-        end
+    if targetTeam:find("inmate") and HasIgnoredItem(targetPlayer) then
+        return false
     end
-    
-    if localTeam:find("guard") and targetTeam:find("inmate") then
-        if GetEquippedWeaponName(targetPlayer) == nil then
-            return false
-        end
+    if localTeam:find("guard") and targetTeam:find("inmate") and GetEquippedWeaponName(targetPlayer) == nil then
+        return false
     end
-    
     return true
 end
 
--- Zoek dichtstbijzijnde speler voor de Losse Taser Knop (Alleen Team Check & Afstand)
 local function GetNearestPlayerForSimpleTaser()
     local nearestPlayer = nil
     local shortestDistance = 45
-    
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
@@ -481,15 +582,12 @@ local function GetNearestPlayerForSimpleTaser()
             end
         end
     end
-    
     return nearestPlayer
 end
 
--- Zoek dichtstbijzijnde speler voor Auto Shoot (Met volledige checks)
 local function GetNearestPlayerForShoot()
     local nearestPlayer = nil
     local shortestDistance = 45
-    
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
@@ -507,11 +605,9 @@ local function GetNearestPlayerForShoot()
             end
         end
     end
-    
     return nearestPlayer
 end
 
--- Functie om exact 1 keer te taseren via de knop (zonder wapen/item checks, wel team check)
 local function SingleTaserShot()
     if IsInVehicle() then return end
     local targetPlayer = GetNearestPlayerForSimpleTaser()
@@ -654,7 +750,7 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
     isTaserOrArresting = false
 end
 
--- Task loop for Auto Get Weapons (MP5 + Remington 870)
+-- Task loop for Auto Get Weapons
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
