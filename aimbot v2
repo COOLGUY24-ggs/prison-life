@@ -13,6 +13,7 @@ local Window = Rayfield:CreateWindow({
 -- Tabs aanmaken voor categorieën
 local MainTab = Window:CreateTab("Main", 4483362458)
 local CombatTab = Window:CreateTab("Combat", 4483362458)
+local VehicleTab = Window:CreateTab("Vehicle", 4483362458)
 local GuiTab = Window:CreateTab("Mobile / GUI", 4483362458)
 local VisualsTab = Window:CreateTab("Visuals / ESP", 4483362458)
 
@@ -40,6 +41,7 @@ local MaxAimlockDistance = 300
 
 local flyConnection = nil
 local lastGlitchTime = 0
+local lastCarClickTime = 0 -- Cooldown variabele voor Get Car
 local CooldownTime = 2.0
 local isTaserOrArresting = false
 
@@ -139,7 +141,61 @@ CombatTab:CreateToggle({
     end,
 })
 
-CombatTab:CreateToggle({
+-- ==================== VEHICLE TAB ====================
+VehicleTab:CreateButton({
+    Name = "Get Car",
+    Callback = function()
+        local currentTime = tick()
+        if currentTime - lastCarClickTime < 2.0 then return end -- 2 seconden cooldown check
+        lastCarClickTime = currentTime
+
+        task.spawn(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            local rootPart = char:FindFirstChild("HumanoidRootPart")
+            if not rootPart then return end
+            
+            -- Sla de huidige locatie op
+            local oldCFrame = rootPart.CFrame
+            
+            -- 1. Teleporteer eerst naar de opgegeven coördinaten
+            rootPart.CFrame = CFrame.new(-193, 55, 1882)
+            task.wait(0.2)
+            
+            -- 2. Vuur daarna de Car Spawner remote af
+            local carArgs = {
+                workspace:WaitForChild("Prison_ITEMS"):WaitForChild("buttons"):WaitForChild("Car Spawner"):WaitForChild("Car Spawner")
+            }
+            pcall(function()
+                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(carArgs))
+            end)
+            
+            -- Wacht even tot de auto gespawned is
+            task.wait(0.5)
+            
+            -- 3. Zoek de VehicleSeat en ga erin zitten
+            local foundSeat = nil
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 50 then
+                    foundSeat = obj
+                    break
+                end
+            end
+            
+            if foundSeat then
+                rootPart.CFrame = foundSeat.CFrame + Vector3.new(0, 3, 0)
+                task.wait(0.1)
+                foundSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
+                task.wait(0.2)
+            end
+            
+            -- 4. Ga terug naar de oude locatie
+            rootPart.CFrame = oldCFrame
+        end)
+    end,
+})
+
+VehicleTab:CreateToggle({
     Name = "Vehicle Fly (Look to Fly Up/Down)",
     CurrentValue = false,
     Flag = "JoystickFlyToggle",
@@ -195,7 +251,6 @@ CombatTab:CreateToggle({
                         if humanoid then
                             local moveDirection = humanoid.MoveDirection
                             if moveDirection.Magnitude > 0 then
-                                -- Volledige 3D beweging op basis van waar de camera naartoe kijkt (inclusief omhoog/omlaag)
                                 local localMove = (camCFrame.RightVector * (moveDirection:Dot(camCFrame.RightVector))) + (camCFrame.LookVector * (moveDirection:Dot(camCFrame.LookVector)))
                                 if localMove.Magnitude > 0 then
                                     velocity = localMove.Unit * FlySpeed
@@ -227,7 +282,7 @@ CombatTab:CreateToggle({
     end,
 })
 
-CombatTab:CreateSlider({
+VehicleTab:CreateSlider({
     Name = "Fly Speed",
     Range = {16, 150},
     Increment = 5,
