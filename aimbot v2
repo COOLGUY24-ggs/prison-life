@@ -10,7 +10,11 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false,
 })
 
-local Tab = Window:CreateTab("Main", 4483362458)
+-- Tabs aanmaken voor categorieën
+local MainTab = Window:CreateTab("Main", 4483362458)
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local GuiTab = Window:CreateTab("Mobile / GUI", 4483362458)
+local VisualsTab = Window:CreateTab("Visuals / ESP", 4483362458)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -44,7 +48,27 @@ fovCircle.Thickness = 1
 fovCircle.Filled = false
 fovCircle.Transparency = 0.7
 
-Tab:CreateToggle({
+-- ==================== MAIN TAB ====================
+MainTab:CreateToggle({
+    Name = "Auto Get Weapons",
+    CurrentValue = false,
+    Flag = "AutoWeaponsToggle",
+    Callback = function(Value)
+        AutoWeaponsEnabled = Value
+    end,
+})
+
+MainTab:CreateToggle({
+    Name = "Team Check (Smart Rank Filter)",
+    CurrentValue = true,
+    Flag = "TeamCheckToggle",
+    Callback = function(Value)
+        TeamCheckEnabled = Value
+    end,
+})
+
+-- ==================== COMBAT TAB ====================
+CombatTab:CreateToggle({
     Name = "Aimlock Mouse Circle (FOV)",
     CurrentValue = false,
     Flag = "AimlockToggle",
@@ -54,43 +78,7 @@ Tab:CreateToggle({
     end,
 })
 
-Tab:CreateToggle({
-    Name = "Team Check (Smart Rank Filter)",
-    CurrentValue = true,
-    Flag = "TeamCheckToggle",
-    Callback = function(Value)
-        TeamCheckEnabled = Value
-    end,
-})
-
-Tab:CreateToggle({
-    Name = "Auto Melee Nearest (20 Studs)",
-    CurrentValue = false,
-    Flag = "AutoMelee20Flag",
-    Callback = function(Value)
-        AutoMeleeEnabled = Value
-    end,
-})
-
-Tab:CreateToggle({
-    Name = "Auto Shoot Taser & Spam Arrest (Safe Delay)",
-    CurrentValue = false,
-    Flag = "AutoShoot30Flag",
-    Callback = function(Value)
-        AutoShootEnabled = Value
-    end,
-})
-
-Tab:CreateToggle({
-    Name = "Auto Get Weapons",
-    CurrentValue = false,
-    Flag = "AutoWeaponsToggle",
-    Callback = function(Value)
-        AutoWeaponsEnabled = Value
-    end,
-})
-
-Tab:CreateSlider({
+CombatTab:CreateSlider({
     Name = "Circle Size",
     Range = {100, 2000},
     Increment = 25,
@@ -103,7 +91,26 @@ Tab:CreateSlider({
     end,
 })
 
-Tab:CreateSlider({
+CombatTab:CreateToggle({
+    Name = "Auto Melee Nearest (20 Studs)",
+    CurrentValue = false,
+    Flag = "AutoMelee20Flag",
+    Callback = function(Value)
+        AutoMeleeEnabled = Value
+    end,
+})
+
+CombatTab:CreateToggle({
+    Name = "Auto Shoot Taser (45 Studs) & Spam Arrest",
+    CurrentValue = false,
+    Flag = "AutoShoot45Flag",
+    Callback = function(Value)
+        AutoShootEnabled = Value
+    end,
+})
+
+-- ==================== MOBILE / GUI TAB ====================
+GuiTab:CreateSlider({
     Name = "Dash Distance (Studs)",
     Range = {5, 20},
     Increment = 1,
@@ -115,7 +122,16 @@ Tab:CreateSlider({
     end,
 })
 
-Tab:CreateSlider({
+GuiTab:CreateToggle({
+    Name = "Mobile/Movable Dash Button",
+    CurrentValue = false,
+    Flag = "DashButtonToggle",
+    Callback = function(Value)
+        DashGui.Enabled = Value
+    end,
+})
+
+GuiTab:CreateSlider({
     Name = "Glitch Distance (Studs)",
     Range = {5, 20},
     Increment = 1,
@@ -127,7 +143,26 @@ Tab:CreateSlider({
     end,
 })
 
-Tab:CreateToggle({
+GuiTab:CreateToggle({
+    Name = "Mobile/Movable Glitch Button",
+    CurrentValue = false,
+    Flag = "GlitchButtonToggle",
+    Callback = function(Value)
+        GlitchGui.Enabled = Value
+    end,
+})
+
+GuiTab:CreateToggle({
+    Name = "Mobile/Movable Taser Button",
+    CurrentValue = false,
+    Flag = "TaserButtonToggle",
+    Callback = function(Value)
+        TaserGui.Enabled = Value
+    end,
+})
+
+-- ==================== VISUALS / ESP TAB ====================
+VisualsTab:CreateToggle({
     Name = "Team ESP (Criminals/Guards/Inmates)",
     CurrentValue = false,
     Flag = "ESPToggle",
@@ -149,7 +184,7 @@ Tab:CreateToggle({
 })
 
 -- Dash GUI Setup
-local DashGui = Instance.new("ScreenGui")
+DashGui = Instance.new("ScreenGui")
 DashGui.Name = "PrisonHubDashGui"
 DashGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
 DashGui.Enabled = false
@@ -158,9 +193,9 @@ local DashButton = Instance.new("TextButton")
 DashButton.Name = "DashButton"
 DashButton.Size = UDim2.new(0, 90, 0, 90)
 DashButton.Position = UDim2.new(0.8, 0, 0.6, 0)
-DashButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-DashButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-DashButton.TextSize = 18
+DashButton.BackgroundColor3 = Color3.fromRGB(240, 240, 240) -- Lichtgrijze achtergrond voor maximaal contrast
+DashButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Zwarte tekst
+DashButton.TextSize = 20
 DashButton.Font = Enum.Font.SourceSansBold
 DashButton.Text = "DASH"
 DashButton.Parent = DashGui
@@ -171,20 +206,11 @@ UICornerDash.Parent = DashButton
 
 local UIStrokeDash = Instance.new("UIStroke")
 UIStrokeDash.Color = Color3.fromRGB(255, 255, 255)
-UIStrokeDash.Thickness = 2
+UIStrokeDash.Thickness = 3
 UIStrokeDash.Parent = DashButton
 
-Tab:CreateToggle({
-    Name = "Mobile/Movable Dash Button",
-    CurrentValue = false,
-    Flag = "DashButtonToggle",
-    Callback = function(Value)
-        DashGui.Enabled = Value
-    end,
-})
-
 -- Glitch GUI Setup
-local GlitchGui = Instance.new("ScreenGui")
+GlitchGui = Instance.new("ScreenGui")
 GlitchGui.Name = "PrisonHubGlitchGui"
 GlitchGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
 GlitchGui.Enabled = false
@@ -193,9 +219,9 @@ local GlitchButton = Instance.new("TextButton")
 GlitchButton.Name = "GlitchButton"
 GlitchButton.Size = UDim2.new(0, 90, 0, 90)
 GlitchButton.Position = UDim2.new(0.65, 0, 0.6, 0)
-GlitchButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-GlitchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-GlitchButton.TextSize = 18
+GlitchButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100) -- Helderrode achtergrond
+GlitchButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Zwarte tekst
+GlitchButton.TextSize = 20
 GlitchButton.Font = Enum.Font.SourceSansBold
 GlitchButton.Text = "GLITCH"
 GlitchButton.Parent = GlitchGui
@@ -206,17 +232,34 @@ UICornerGlitch.Parent = GlitchButton
 
 local UIStrokeGlitch = Instance.new("UIStroke")
 UIStrokeGlitch.Color = Color3.fromRGB(255, 255, 255)
-UIStrokeGlitch.Thickness = 2
+UIStrokeGlitch.Thickness = 3
 UIStrokeGlitch.Parent = GlitchButton
 
-Tab:CreateToggle({
-    Name = "Mobile/Movable Glitch Button",
-    CurrentValue = false,
-    Flag = "GlitchButtonToggle",
-    Callback = function(Value)
-        GlitchGui.Enabled = Value
-    end,
-})
+-- Taser GUI Setup
+TaserGui = Instance.new("ScreenGui")
+TaserGui.Name = "PrisonHubTaserGui"
+TaserGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+TaserGui.Enabled = false
+
+local TaserButton = Instance.new("TextButton")
+TaserButton.Name = "TaserButton"
+TaserButton.Size = UDim2.new(0, 90, 0, 90)
+TaserButton.Position = UDim2.new(0.5, 0, 0.6, 0)
+TaserButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255) -- Helderblauwe achtergrond
+TaserButton.TextColor3 = Color3.fromRGB(0, 0, 0) -- Zwarte tekst
+TaserButton.TextSize = 20
+TaserButton.Font = Enum.Font.SourceSansBold
+TaserButton.Text = "TASER"
+TaserButton.Parent = TaserGui
+
+local UICornerTaser = Instance.new("UICorner")
+UICornerTaser.CornerRadius = UDim.new(1, 0)
+UICornerTaser.Parent = TaserButton
+
+local UIStrokeTaser = Instance.new("UIStroke")
+UIStrokeTaser.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeTaser.Thickness = 3
+UIStrokeTaser.Parent = TaserButton
 
 -- Dragging logic for Dash Button
 local draggingDash, dragInputDash, dragStartDash, startPosDash
@@ -225,30 +268,17 @@ DashButton.InputBegan:Connect(function(input)
         draggingDash = true
         dragStartDash = input.Position
         startPosDash = DashButton.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                draggingDash = false
-            end
-        end)
     end
 end)
-
 DashButton.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInputDash = input
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInputDash and draggingDash then
         local delta = input.Position - dragStartDash
-        DashButton.Position = UDim2.new(
-            startPosDash.X.Scale, 
-            startPosDash.X.Offset + delta.X, 
-            startPosDash.Y.Scale, 
-            startPosDash.Y.Offset + delta.Y
-        )
+        DashButton.Position = UDim2.new(startPosDash.X.Scale, startPosDash.X.Offset + delta.X, startPosDash.Y.Scale, startPosDash.Y.Offset + delta.Y)
     end
 end)
 
@@ -259,30 +289,38 @@ GlitchButton.InputBegan:Connect(function(input)
         draggingGlitch = true
         dragStartGlitch = input.Position
         startPosGlitch = GlitchButton.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                draggingGlitch = false
-            end
-        end)
     end
 end)
-
 GlitchButton.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInputGlitch = input
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInputGlitch and draggingGlitch then
         local delta = input.Position - dragStartGlitch
-        GlitchButton.Position = UDim2.new(
-            startPosGlitch.X.Scale, 
-            startPosGlitch.X.Offset + delta.X, 
-            startPosGlitch.Y.Scale, 
-            startPosGlitch.Y.Offset + delta.Y
-        )
+        GlitchButton.Position = UDim2.new(startPosGlitch.X.Scale, startPosGlitch.X.Offset + delta.X, startPosGlitch.Y.Scale, startPosGlitch.Y.Offset + delta.Y)
+    end
+end)
+
+-- Dragging logic for Taser Button
+local draggingTaser, dragInputTaser, dragStartTaser, startPosTaser
+TaserButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingTaser = true
+        dragStartTaser = input.Position
+        startPosTaser = TaserButton.Position
+    end
+end)
+TaserButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInputTaser = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInputTaser and draggingTaser then
+        local delta = input.Position - dragStartTaser
+        TaserButton.Position = UDim2.new(startPosTaser.X.Scale, startPosTaser.X.Offset + delta.X, startPosTaser.Y.Scale, startPosTaser.Y.Offset + delta.Y)
     end
 end)
 
@@ -340,25 +378,30 @@ local function IsInVehicle()
     return false
 end
 
-local function IsVisible(targetPart)
-    if not targetPart then return false end
-    local origin = Camera.CFrame.Position
-    local direction = (targetPart.Position - origin)
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-    
-    local result = Workspace:Raycast(origin, direction, raycastParams)
-    if result then
-        local hitInstance = result.Instance
-        if hitInstance:IsDescendantOf(targetPart.Parent) then
-            return true
-        end
-        return false
-    end
+local function IsAlive(player)
+    if not player.Character then return false end
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return false end
+    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return false end
     return true
 end
 
+-- Simpele Team Check (alleen kijken of ze in een ander team zitten indien ingeschakeld)
+local function CanTargetByRankSimple(localPlayer, targetPlayer)
+    if not TeamCheckEnabled then return true end
+    
+    local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
+    local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
+    
+    if localTeam ~= "" and localTeam == targetTeam then
+        return false
+    end
+    
+    return true
+end
+
+-- Uitgebreide Team Check voor Auto Shoot (met wapens/items checks)
 local function GetEquippedWeaponName(player)
     if not player.Character then return nil end
     for _, item in ipairs(player.Character:GetChildren()) do
@@ -385,16 +428,7 @@ local function HasIgnoredItem(player)
     return false
 end
 
-local function IsAlive(player)
-    if not player.Character then return false end
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then return false end
-    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return false end
-    return true
-end
-
-local function CanTargetByRank(localPlayer, targetPlayer)
+local function CanTargetByRankFull(localPlayer, targetPlayer)
     if not TeamCheckEnabled then return true end
     
     local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
@@ -425,16 +459,17 @@ local function CanTargetByRank(localPlayer, targetPlayer)
     return true
 end
 
-local function GetNearestPlayerForMelee()
+-- Zoek dichtstbijzijnde speler voor de Losse Taser Knop (Alleen Team Check & Afstand)
+local function GetNearestPlayerForSimpleTaser()
     local nearestPlayer = nil
-    local shortestDistance = 20
+    local shortestDistance = 45
     
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and IsAlive(player) then
-            if CanTargetByRank(LocalPlayer, player) then
+            if CanTargetByRankSimple(LocalPlayer, player) then
                 local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if enemyRoot then
                     local distance = (localRoot.Position - enemyRoot.Position).Magnitude
@@ -450,16 +485,17 @@ local function GetNearestPlayerForMelee()
     return nearestPlayer
 end
 
+-- Zoek dichtstbijzijnde speler voor Auto Shoot (Met volledige checks)
 local function GetNearestPlayerForShoot()
     local nearestPlayer = nil
-    local shortestDistance = 30
+    local shortestDistance = 45
     
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and IsAlive(player) then
-            if CanTargetByRank(LocalPlayer, player) then
+            if CanTargetByRankFull(LocalPlayer, player) then
                 local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if enemyRoot then
                     local distance = (localRoot.Position - enemyRoot.Position).Magnitude
@@ -474,6 +510,59 @@ local function GetNearestPlayerForShoot()
     
     return nearestPlayer
 end
+
+-- Functie om exact 1 keer te taseren via de knop (zonder wapen/item checks, wel team check)
+local function SingleTaserShot()
+    if IsInVehicle() then return end
+    local targetPlayer = GetNearestPlayerForSimpleTaser()
+    if not targetPlayer or not targetPlayer.Character then return end
+    local targetHead = targetPlayer.Character:FindFirstChild("Head")
+    local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHead or not targetRoot then return end
+    
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not localRoot then return end
+    
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then return end
+    
+    local currentTool = char:FindFirstChildOfClass("Tool")
+    local taserTool = char:FindFirstChild("Taser") or backpack:FindFirstChild("Taser")
+    
+    if taserTool then
+        if currentTool ~= taserTool then
+            humanoid:EquipTool(taserTool)
+            task.wait(0.05)
+        end
+        
+        local shootArgs = {
+            {
+                {
+                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                    targetHead
+                }
+            }
+        }
+        
+        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+        if gunRemotes then
+            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+            if shootEvent then
+                pcall(function()
+                    shootEvent:FireServer(unpack(shootArgs))
+                end)
+            end
+        end
+    end
+end
+
+TaserButton.MouseButton1Click:Connect(function()
+    task.spawn(SingleTaserShot)
+end)
 
 local function ExecuteTaserAndSpamArrest(targetPlayer)
     if isTaserOrArresting or IsInVehicle() then return end
@@ -516,7 +605,6 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
         if gunRemotes then
             local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
             if shootEvent then
-                -- Minder vaak spammen om anti-cheat bans te voorkomen
                 for i = 1, 4 do
                     if IsInVehicle() then break end
                     pcall(function()
@@ -558,7 +646,7 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
                 pcall(function()
                     arrestEvent:InvokeServer(unpack(arrestArgs))
                 end)
-                task.wait(0.1) -- Veiliger interval tegen bans
+                task.wait(0.1)
             end
         end
     end
@@ -566,7 +654,7 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
     isTaserOrArresting = false
 end
 
--- Task loop for Auto Get Weapons (MP5 + Remington 870) met veilige delay
+-- Task loop for Auto Get Weapons (MP5 + Remington 870)
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
@@ -584,7 +672,7 @@ task.spawn(function()
                 ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(r870Args))
             end)
         end
-        task.wait(3) -- Langere pauze zodat het niet blijft spammen
+        task.wait(3)
     end
 end)
 
@@ -594,31 +682,14 @@ RunService.RenderStepped:Connect(function()
 
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-    -- Als je in een voertuig zit, worden alle actieve remotes overgeslagen
     if IsInVehicle() then
         return
     end
 
-    -- Auto Melee Loop (met veilige vertraging via debounce/task.wait verwerkt in check of direct)
     if AutoMeleeEnabled then
-        local target = GetNearestPlayerForMelee()
-        if target then
-            local args = {
-                target,
-                1,
-                1
-            }
-            local meleeEvent = ReplicatedStorage:FindFirstChild("meleeEvent")
-            if meleeEvent then
-                pcall(function()
-                    meleeEvent:FireServer(unpack(args))
-                end)
-            end
-            task.wait(0.15) -- Voorkomt te snel spammen (anti-ban)
-        end
+        local target = GetNearestPlayerForShoot()
     end
 
-    -- Auto Shoot (Taser + Arrest) Loop
     if AutoShootEnabled and localRoot and not isTaserOrArresting then
         local target = GetNearestPlayerForShoot()
         if target then
@@ -702,14 +773,27 @@ RunService.RenderStepped:Connect(function()
 
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
-                if CanTargetByRank(LocalPlayer, player) then
+                if CanTargetByRankFull(LocalPlayer, player) then
                     local head = player.Character.Head
                     
                     if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
                         local targetRootPart = player.Character.HumanoidRootPart
                         local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
                         if distanceInStuds <= MaxAimlockDistance then
-                            if IsVisible(head) then
+                            local origin = Camera.CFrame.Position
+                            local direction = (head.Position - origin)
+                            local raycastParams = RaycastParams.new()
+                            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+                            local result = Workspace:Raycast(origin, direction, raycastParams)
+                            local isVisible = false
+                            if result and result.Instance:IsDescendantOf(head.Parent) then
+                                isVisible = true
+                            elseif not result then
+                                isVisible = true
+                            end
+
+                            if isVisible then
                                 local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
                                 if onScreen then
                                     local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
