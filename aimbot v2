@@ -39,9 +39,13 @@ local DashDistance = 10
 local GlitchDistance = 10
 local MaxAimlockDistance = 300
 
+-- Variabelen voor Vehicle Speed
+local speedEnabled = false
+local speedMultiplier = 50
+
 local flyConnection = nil
 local lastGlitchTime = 0
-local lastCarClickTime = 0 -- Cooldown variabele voor Get Car
+local lastCarClickTime = 0
 local CooldownTime = 2.0
 local isTaserOrArresting = false
 
@@ -146,7 +150,7 @@ VehicleTab:CreateButton({
     Name = "Get Car",
     Callback = function()
         local currentTime = tick()
-        if currentTime - lastCarClickTime < 2.0 then return end -- 2 seconden cooldown check
+        if currentTime - lastCarClickTime < 2.0 then return end
         lastCarClickTime = currentTime
 
         task.spawn(function()
@@ -155,14 +159,12 @@ VehicleTab:CreateButton({
             local rootPart = char:FindFirstChild("HumanoidRootPart")
             if not rootPart then return end
             
-            -- Sla de huidige locatie op
             local oldCFrame = rootPart.CFrame
             
-            -- 1. Teleporteer eerst naar de opgegeven coördinaten
+            -- Teleporteer naar de knop om de auto te spawnen
             rootPart.CFrame = CFrame.new(-193, 55, 1882)
             task.wait(0.2)
             
-            -- 2. Vuur daarna de Car Spawner remote af
             local carArgs = {
                 workspace:WaitForChild("Prison_ITEMS"):WaitForChild("buttons"):WaitForChild("Car Spawner"):WaitForChild("Car Spawner")
             }
@@ -170,13 +172,13 @@ VehicleTab:CreateButton({
                 ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(carArgs))
             end)
             
-            -- Wacht even tot de auto gespawned is
-            task.wait(0.5)
+            -- Wacht langer zodat de server de wielen en het voertuig volledig laadt
+            task.wait(0.8)
             
-            -- 3. Zoek de VehicleSeat en ga erin zitten
             local foundSeat = nil
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 50 then
+                -- Zoek specifiek naar een VehicleSeat (bestuurdersstoel) en controleer of de naam of hiërarchie duidt op de bestuurderskant
+                if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 60 then
                     foundSeat = obj
                     break
                 end
@@ -184,14 +186,34 @@ VehicleTab:CreateButton({
             
             if foundSeat then
                 rootPart.CFrame = foundSeat.CFrame + Vector3.new(0, 3, 0)
-                task.wait(0.1)
+                task.wait(0.2)
                 foundSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
                 task.wait(0.2)
             end
             
-            -- 4. Ga terug naar de oude locatie
             rootPart.CFrame = oldCFrame
         end)
+    end,
+})
+
+VehicleTab:CreateToggle({
+    Name = "Enable Vehicle Speed",
+    CurrentValue = false,
+    Flag = "VehicleSpeedToggle",
+    Callback = function(Value)
+        speedEnabled = Value
+    end,
+})
+
+VehicleTab:CreateSlider({
+    Name = "Speed Multiplier",
+    Range = {10, 200},
+    Increment = 5,
+    Suffix = " Speed",
+    CurrentValue = 50,
+    Flag = "SpeedSlider",
+    Callback = function(Value)
+        speedMultiplier = Value
     end,
 })
 
@@ -804,6 +826,23 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
     
     isTaserOrArresting = false
 end
+
+-- Task loop voor Vehicle Speed aanpassing
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if speedEnabled then
+            local vehiclePart = GetCurrentVehiclePart()
+            if vehiclePart then
+                local vehicle = vehiclePart.Parent
+                local primaryPart = vehicle.PrimaryPart or vehiclePart
+                if primaryPart then
+                    primaryPart.Velocity = primaryPart.CFrame.LookVector * speedMultiplier
+                end
+            end
+        end
+    end
+end)
 
 -- Task loop for Auto Get Weapons
 task.spawn(function()
