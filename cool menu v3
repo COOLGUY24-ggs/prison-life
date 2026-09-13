@@ -18,7 +18,7 @@ if CoreGui:FindFirstChild("LuarobloxCustomHub") then
     CoreGui.LuarobloxCustomHub:Destroy()
 end
 
--- Custom UI Setup with Neon/Cyberpunk Style
+-- Custom UI Setup with Ultra Cyberpunk Neon / Glassmorphism Style
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LuarobloxCustomHub"
 ScreenGui.Parent = CoreGui
@@ -29,14 +29,15 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 580, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -290, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+MainFrame.BackgroundTransparency = 0.05
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 14)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
@@ -44,16 +45,26 @@ MainStroke.Color = Color3.fromRGB(0, 255, 204)
 MainStroke.Thickness = 2.5
 MainStroke.Parent = MainFrame
 
+-- Gradient Glow Overlay for MainFrame
+local MainGradient = Instance.new("UIGradient")
+MainGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 204)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255))
+})
+MainGradient.Rotation = 45
+MainGradient.Parent = MainStroke
+
 -- Topbar (Title & Glowing Neon Effect)
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 45)
-TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+TopBar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
 local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 12)
+TopBarCorner.CornerRadius = UDim.new(0, 14)
 TopBarCorner.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
@@ -90,20 +101,20 @@ local function MakeDraggable(btn)
     end)
 end
 
--- Minimize/Toggle UI Button
+-- Minimize/Toggle UI Button with Lightning Emoji
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0, 45, 0, 45)
 ToggleButton.Position = UDim2.new(0, 20, 0, 20)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
 ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 204)
-ToggleButton.TextSize = 20
+ToggleButton.TextSize = 22
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.Text = "⚡"
 ToggleButton.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.CornerRadius = UDim.new(0, 12)
 ToggleCorner.Parent = ToggleButton
 
 local ToggleStroke = Instance.new("UIStroke")
@@ -122,7 +133,7 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 150, 1, -45)
 Sidebar.Position = UDim2.new(0, 0, 0, 45)
-Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
 Sidebar.BorderSizePixel = 0
 Sidebar.CanvasSize = UDim2.new(0, 0, 0, 350)
 Sidebar.ScrollBarThickness = 4
@@ -145,7 +156,7 @@ local function CreateCustomTab(name, iconText)
     local tabBtn = Instance.new("TextButton")
     tabBtn.Size = UDim2.new(1, -12, 0, 38)
     tabBtn.Position = UDim2.new(0, 6, 0, 0)
-    tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     tabBtn.TextColor3 = Color3.fromRGB(160, 160, 180)
     tabBtn.TextSize = 14
     tabBtn.Font = Enum.Font.GothamBold
@@ -196,13 +207,13 @@ local function CreateCustomTab(name, iconText)
         for _, item in ipairs(tabButtonsList) do
             item.Indicator.Visible = false
             item.Button.TextColor3 = Color3.fromRGB(160, 160, 180)
-            TweenService:Create(item.Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 38)}):Play()
+            TweenService:Create(item.Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20, 20, 30)}):Play()
         end
         
         tabScroll.Visible = true
         activeIndicator.Visible = true
         tabBtn.TextColor3 = Color3.fromRGB(0, 255, 204)
-        TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(32, 32, 48)}):Play()
+        TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 42)}):Play()
         
         activeTab = tabScroll
     end)
@@ -211,7 +222,7 @@ local function CreateCustomTab(name, iconText)
         tabScroll.Visible = true
         activeIndicator.Visible = true
         tabBtn.TextColor3 = Color3.fromRGB(0, 255, 204)
-        tabBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 48)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 42)
         activeTab = tabScroll
     end
 
@@ -230,11 +241,11 @@ local SettingsTab = CreateCustomTab("Settings", "⚙️")
 local function AddDashboardBanner(parent)
     local banner = Instance.new("Frame")
     banner.Size = UDim2.new(1, -12, 0, 85)
-    banner.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
+    banner.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
     banner.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = banner
 
     local stroke = Instance.new("UIStroke")
@@ -295,7 +306,7 @@ AddDashboardBanner(MainTab)
 local function AddToggle(parent, text, default, callback)
     local toggleBtn = Instance.new("TextButton")
     toggleBtn.Size = UDim2.new(1, -12, 0, 38)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
     toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     toggleBtn.TextSize = 14
     toggleBtn.Font = Enum.Font.GothamBold
@@ -308,11 +319,10 @@ local function AddToggle(parent, text, default, callback)
     corner.Parent = toggleBtn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(50, 50, 70)
+    stroke.Color = Color3.fromRGB(45, 45, 65)
     stroke.Thickness = 1.5
     stroke.Parent = toggleBtn
 
-    -- Rayfield-style Toggle Switch visual on the right
     local switchBg = Instance.new("Frame")
     switchBg.Size = UDim2.new(0, 44, 0, 22)
     switchBg.Position = UDim2.new(1, -52, 0.5, -11)
@@ -354,7 +364,7 @@ end
 local function AddButton(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -12, 0, 38)
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 42)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
@@ -367,7 +377,7 @@ local function AddButton(parent, text, callback)
     corner.Parent = btn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(70, 70, 100)
+    stroke.Color = Color3.fromRGB(60, 60, 90)
     stroke.Thickness = 1.5
     stroke.Parent = btn
 
@@ -377,7 +387,7 @@ end
 local function AddSlider(parent, text, min, max, default, suffix, callback)
     local sliderContainer = Instance.new("Frame")
     sliderContainer.Size = UDim2.new(1, -12, 0, 60)
-    sliderContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    sliderContainer.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
     sliderContainer.Parent = parent
 
     local corner = Instance.new("UICorner")
@@ -398,7 +408,7 @@ local function AddSlider(parent, text, min, max, default, suffix, callback)
     local sliderButton = Instance.new("TextButton")
     sliderButton.Size = UDim2.new(1, -20, 0, 16)
     sliderButton.Position = UDim2.new(0, 10, 0, 35)
-    sliderButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    sliderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
     sliderButton.Text = ""
     sliderButton.Parent = sliderContainer
 
@@ -457,11 +467,7 @@ local speedEnabled = false
 local speedMultiplier = 50
 
 -- Feature Toggle States
-local AutoCarEnabled = false
-local AutoCarSpawnerStayEnabled = false
-local AutoSingleTaserEnabled = false
-local AutoBuffedTaserEnabled = false
-local AutoArrestEnabled = false
+local LightningToggleState = false
 
 -- Settings Variables
 local RainbowEnabled = false
@@ -564,14 +570,123 @@ AddToggle(CombatTab, "Auto Shoot Taser & Spam Arrest", false, function(Value)
 end)
 
 -- ==================== VEHICLE TAB ====================
-AddToggle(VehicleTab, "Auto Get Car Loop", false, function(Value)
-    AutoCarEnabled = Value
-    PlayNotificationSound()
+AddButton(VehicleTab, "Get Car", function()
+    local currentTime = tick()
+    if currentTime - lastCarClickTime < 2.0 then return end
+    lastCarClickTime = currentTime
+
+    task.spawn(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local rootPart = char:FindFirstChild("HumanoidRootPart")
+        if not rootPart then return end
+        
+        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+        if not buttonsFolder then return end
+        
+        local nearestSpawner = nil
+        local shortestDist = math.huge
+        
+        for _, item in ipairs(buttonsFolder:GetChildren()) do
+            local carSpawnerPart = item:FindFirstChild("Car Spawner")
+            if carSpawnerPart then
+                local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
+                if partPos then
+                    local dist = (rootPart.Position - partPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        nearestSpawner = carSpawnerPart
+                    end
+                end
+            end
+        end
+        
+        if not nearestSpawner then return end
+        
+        local oldCFrame = rootPart.CFrame
+        local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+        
+        rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
+        task.wait(0.2)
+        
+        pcall(function()
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
+        end)
+        
+        task.wait(0.8)
+        
+        local foundSeat = nil
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 60 then
+                foundSeat = obj
+                break
+            end
+        end
+        
+        if foundSeat then
+            rootPart.CFrame = foundSeat.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.2)
+            foundSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
+            task.wait(0.2)
+        end
+        
+        rootPart.CFrame = oldCFrame
+    end)
 end)
 
-AddToggle(VehicleTab, "Auto Get Car (Stay At Spawner Loop)", false, function(Value)
-    AutoCarSpawnerStayEnabled = Value
-    PlayNotificationSound()
+AddButton(VehicleTab, "Get Car (Stay At Spawner)", function()
+    local currentTime = tick()
+    if currentTime - lastCarClickTime < 2.0 then return end
+    lastCarClickTime = currentTime
+
+    task.spawn(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local rootPart = char:FindFirstChild("HumanoidRootPart")
+        if not rootPart then return end
+        
+        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+        if not buttonsFolder then return end
+        
+        local nearestSpawner = nil
+        local shortestDist = math.huge
+        
+        for _, item in ipairs(buttonsFolder:GetChildren()) do
+            local carSpawnerPart = item:FindFirstChild("Car Spawner")
+            if carSpawnerPart then
+                local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
+                if partPos then
+                    local dist = (rootPart.Position - partPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        nearestSpawner = carSpawnerPart
+                    end
+                end
+            end
+        end
+        
+        if not nearestSpawner then return end
+        local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+        
+        rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
+        task.wait(0.2)
+        
+        pcall(function()
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
+        end)
+        
+        task.wait(0.8)
+        
+        local success, targetSeat = pcall(function()
+            return Workspace.CarContainer:GetChildren()[5].Body:GetChildren()[4]
+        end)
+        
+        if success and targetSeat and (targetSeat:IsA("VehicleSeat") or targetSeat:IsA("Seat")) then
+            rootPart.CFrame = targetSeat.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.2)
+            targetSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
+        end
+    end)
 end)
 
 AddToggle(VehicleTab, "Enable Vehicle Speed", false, function(Value)
@@ -693,21 +808,6 @@ AddToggle(GuiTab, "Mobile Buffed Taser Button", false, function(Value)
     PlayNotificationSound()
 end)
 
-AddToggle(GuiTab, "Auto Single Taser Loop", false, function(Value)
-    AutoSingleTaserEnabled = Value
-    PlayNotificationSound()
-end)
-
-AddToggle(GuiTab, "Auto Buffed Taser Loop", false, function(Value)
-    AutoBuffedTaserEnabled = Value
-    PlayNotificationSound()
-end)
-
-AddToggle(GuiTab, "Auto Arrest Loop", false, function(Value)
-    AutoArrestEnabled = Value
-    PlayNotificationSound()
-end)
-
 -- ==================== VISUALS / ESP TAB ====================
 AddToggle(VisualsTab, "Team ESP (Chams & Tags)", false, function(Value)
     ESPEnabled = Value
@@ -727,6 +827,16 @@ AddToggle(VisualsTab, "Team ESP (Chams & Tags)", false, function(Value)
 end)
 
 -- ==================== SETTINGS TAB ====================
+AddToggle(SettingsTab, "Pin Lightning Emoji Button (Toggle State)", false, function(Value)
+    LightningToggleState = Value
+    PlayNotificationSound()
+    if LightningToggleState then
+        ToggleButton.Text = "⚡ [PINNED]"
+    else
+        ToggleButton.Text = "⚡"
+    end
+end)
+
 AddButton(SettingsTab, "Menu Size: Normal (580x420)", function()
     PlayNotificationSound()
     CurrentSize = "Normal"
@@ -765,9 +875,9 @@ end)
 AddButton(SettingsTab, "Theme: Dark (Cyber Neon)", function()
     PlayNotificationSound()
     CurrentTheme = "Dark"
-    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
-    TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+    TopBar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
     MainStroke.Color = Color3.fromRGB(0, 255, 204)
 end)
 
@@ -795,7 +905,7 @@ local function CreateNeonButton(name, text, color, position)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 85, 0, 85)
     btn.Position = position
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
     btn.TextColor3 = color
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
@@ -815,11 +925,11 @@ local function CreateNeonButton(name, text, color, position)
     return sg, btn
 end
 
-DashGui, DashButton = CreateNeonButton("Dash", "DASH", Color3.fromRGB(0, 255, 204), UDim2.new(0.8, 0, 0.6, 0))
-GlitchGui, GlitchButton = CreateNeonButton("Glitch", "GLITCH", Color3.fromRGB(255, 80, 120), UDim2.new(0.65, 0, 0.6, 0))
-TaserGui, TaserButton = CreateNeonButton("Taser", "TASER", Color3.fromRGB(80, 180, 255), UDim2.new(0.5, 0, 0.6, 0))
-ArrestGui, ArrestButton = CreateNeonButton("Arrest", "ARREST", Color3.fromRGB(255, 200, 50), UDim2.new(0.35, 0, 0.6, 0))
-BuffedTaserGui, BuffedTaserButton = CreateNeonButton("BuffedTaser", "BUFFED\nTASER", Color3.fromRGB(180, 100, 255), UDim2.new(0.2, 0, 0.6, 0))
+local DashGui, DashButton = CreateNeonButton("Dash", "DASH", Color3.fromRGB(0, 255, 204), UDim2.new(0.8, 0, 0.6, 0))
+local GlitchGui, GlitchButton = CreateNeonButton("Glitch", "GLITCH", Color3.fromRGB(255, 80, 120), UDim2.new(0.65, 0, 0.6, 0))
+local TaserGui, TaserButton = CreateNeonButton("Taser", "TASER", Color3.fromRGB(80, 180, 255), UDim2.new(0.5, 0, 0.6, 0))
+local ArrestGui, ArrestButton = CreateNeonButton("Arrest", "ARREST", Color3.fromRGB(255, 200, 50), UDim2.new(0.35, 0, 0.6, 0))
+local BuffedTaserGui, BuffedTaserButton = CreateNeonButton("BuffedTaser", "BUFFED\nTASER", Color3.fromRGB(180, 100, 255), UDim2.new(0.2, 0, 0.6, 0))
 
 -- Rainbow effect loop
 task.spawn(function()
@@ -1208,158 +1318,27 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
     end
     
     local handcuffsTool = char and (char:FindFirstChild("Handcuffs") or backpack and backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack and backpack:FindFirstChild("Handcuff"))
-    if handcuffsTool and not IsInVehicle() and humanoid then
+    if handcuffsTool and humanoid and not IsInVehicle() then
         humanoid:EquipTool(handcuffsTool)
         task.wait(0.1)
         
-        pcall(function()
-            local arrestEvent = ReplicatedStorage.Remotes.ArrestPlayer
+        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        if arrestEvent then
             for i = 1, 6 do
                 if IsInVehicle() or not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
-                if (localRoot.Position - targetPlayer.Character.HumanoidRootPart.Position).Magnitude > 13 then break end
-                arrestEvent:InvokeServer(targetPlayer, 1)
+                if (localRoot.Position - targetPlayer.Character.HumanoidRootPart.Position).Magnitude > 13 then
+                    break
+                end
+                pcall(function()
+                    arrestEvent:InvokeServer(targetPlayer, 1)
+                end)
                 task.wait(0.1)
             end
-        end)
+        end
     end
+    
     isTaserOrArresting = false
 end
-
--- Auto Car Loop (Get Car)
-task.spawn(function()
-    while true do
-        if AutoCarEnabled and not IsInVehicle() then
-            local currentTime = tick()
-            if currentTime - lastCarClickTime >= 2.0 then
-                lastCarClickTime = currentTime
-                pcall(function()
-                    local char = LocalPlayer.Character
-                    if char then
-                        local rootPart = char:FindFirstChild("HumanoidRootPart")
-                        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
-                        if rootPart and buttonsFolder then
-                            local nearestSpawner, shortestDist = nil, math.huge
-                            for _, item in ipairs(buttonsFolder:GetChildren()) do
-                                local carSpawnerPart = item:FindFirstChild("Car Spawner")
-                                if carSpawnerPart then
-                                    local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
-                                    if partPos then
-                                        local dist = (rootPart.Position - partPos).Magnitude
-                                        if dist < shortestDist then
-                                            shortestDist = dist
-                                            nearestSpawner = carSpawnerPart
-                                        end
-                                    end
-                                end
-                            end
-                            if nearestSpawner then
-                                local oldCFrame = rootPart.CFrame
-                                local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
-                                rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
-                                task.wait(0.2)
-                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
-                                task.wait(0.8)
-                                local foundSeat = nil
-                                for _, obj in ipairs(Workspace:GetDescendants()) do
-                                    if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 60 then
-                                        foundSeat = obj
-                                        break
-                                    end
-                                end
-                                if foundSeat then
-                                    rootPart.CFrame = foundSeat.CFrame + Vector3.new(0, 3, 0)
-                                    task.wait(0.2)
-                                    foundSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
-                                end
-                                rootPart.CFrame = oldCFrame
-                            end
-                        end
-                    end
-                end)
-            end
-        end
-        task.wait(1)
-    end
-end)
-
--- Auto Car Spawner Stay Loop
-task.spawn(function()
-    while true do
-        if AutoCarSpawnerStayEnabled and not IsInVehicle() then
-            local currentTime = tick()
-            if currentTime - lastCarClickTime >= 2.0 then
-                lastCarClickTime = currentTime
-                pcall(function()
-                    local char = LocalPlayer.Character
-                    if char then
-                        local rootPart = char:FindFirstChild("HumanoidRootPart")
-                        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
-                        if rootPart and buttonsFolder then
-                            local nearestSpawner, shortestDist = nil, math.huge
-                            for _, item in ipairs(buttonsFolder:GetChildren()) do
-                                local carSpawnerPart = item:FindFirstChild("Car Spawner")
-                                if carSpawnerPart then
-                                    local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
-                                    if partPos then
-                                        local dist = (rootPart.Position - partPos).Magnitude
-                                        if dist < shortestDist then
-                                            shortestDist = dist
-                                            nearestSpawner = carSpawnerPart
-                                        end
-                                    end
-                                end
-                            end
-                            if nearestSpawner then
-                                local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
-                                rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
-                                task.wait(0.2)
-                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
-                                task.wait(0.8)
-                                local success, targetSeat = pcall(function()
-                                    return Workspace.CarContainer:GetChildren()[5].Body:GetChildren()[4]
-                                end)
-                                if success and targetSeat and (targetSeat:IsA("VehicleSeat") or targetSeat:IsA("Seat")) then
-                                    rootPart.CFrame = targetSeat.CFrame + Vector3.new(0, 3, 0)
-                                    task.wait(0.2)
-                                    targetSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
-                                end
-                            end
-                        end
-                    end
-                end)
-            end
-        end
-        task.wait(1)
-    end
-end)
-
--- Auto Loops for Action Toggles
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if AutoSingleTaserEnabled then
-            pcall(SingleTaserShot)
-        end
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if AutoBuffedTaserEnabled then
-            pcall(BuffedTaserAndArrestAction)
-        end
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.3)
-        if AutoArrestEnabled then
-            pcall(SingleArrestAction)
-        end
-    end
-end)
 
 task.spawn(function()
     while true do
@@ -1367,7 +1346,8 @@ task.spawn(function()
         if speedEnabled then
             local vehiclePart = GetCurrentVehiclePart()
             if vehiclePart then
-                local primaryPart = vehiclePart.Parent:IsA("Model") and (vehiclePart.Parent.PrimaryPart or vehiclePart) or vehiclePart
+                local vehicle = vehiclePart.Parent
+                local primaryPart = vehicle.PrimaryPart or vehiclePart
                 if primaryPart then
                     primaryPart.Velocity = primaryPart.CFrame.LookVector * speedMultiplier
                 end
@@ -1379,7 +1359,9 @@ end)
 local function HasWeaponInInventoryOrCharacter(weaponName)
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:FindFirstChild("Backpack")
-    return (char and char:FindFirstChild(weaponName)) or (backpack and backpack:FindFirstChild(weaponName))
+    if char and char:FindFirstChild(weaponName) then return true end
+    if backpack and backpack:FindFirstChild(weaponName) then return true end
+    return false
 end
 
 task.spawn(function()
@@ -1393,21 +1375,25 @@ task.spawn(function()
                 if not (hasRemington and hasMP5) then
                     local char = LocalPlayer.Character
                     local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                    
                     if rootPart then
                         local oldCFrame = rootPart.CFrame
                         rootPart.CFrame = CFrame.new(817, 98, 2222)
                         task.wait(0.4)
                         
-                        pcall(function()
-                            if not hasMP5 then
-                                ReplicatedStorage.Remotes.InteractWithItem:InvokeServer(Workspace.Prison_ITEMS.giver.MP5["Meshes/MP5 (2)"])
-                                task.wait(0.3)
-                            end
-                            if not hasRemington then
-                                ReplicatedStorage.Remotes.InteractWithItem:InvokeServer(Workspace.Prison_ITEMS.giver["Remington 870"]["Meshes/r870_2"])
-                                task.wait(0.3)
-                            end
-                        end)
+                        if not hasMP5 then
+                            pcall(function()
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)"))
+                            end)
+                            task.wait(0.3)
+                        end
+                        
+                        if not hasRemington then
+                            pcall(function()
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2"))
+                            end)
+                            task.wait(0.3)
+                        end
                         
                         rootPart.CFrame = oldCFrame
                     end
@@ -1432,7 +1418,7 @@ RunService.RenderStepped:Connect(function()
             local nearestTarget = GetNearestPlayerForMelee()
             if nearestTarget then
                 pcall(function()
-                    ReplicatedStorage.meleeEvent:FireServer(nearestTarget, 1, 1)
+                    ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(nearestTarget, 1, 1)
                 end)
             end
         end
@@ -1465,7 +1451,15 @@ RunService.RenderStepped:Connect(function()
                     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
                 end
                 
-                highlight.FillColor = isCriminal and Color3.fromRGB(255, 60, 60) or (teamName:lower():find("guard") and Color3.fromRGB(60, 120, 255) or (teamName:lower():find("inmate") and Color3.fromRGB(255, 165, 0) or Color3.fromRGB(255, 255, 255)))
+                if isCriminal then
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                elseif teamName:lower():find("guard") then
+                    highlight.FillColor = Color3.fromRGB(0, 0, 255)
+                elseif teamName:lower():find("inmate") then
+                    highlight.FillColor = Color3.fromRGB(255, 165, 0)
+                else
+                    highlight.FillColor = Color3.fromRGB(255, 255, 255)
+                end
 
                 if head then
                     local billboard = head:FindFirstChild("WeaponTag")
@@ -1482,21 +1476,30 @@ RunService.RenderStepped:Connect(function()
                             textLabel.Name = "Text"
                             textLabel.Size = UDim2.new(1, 0, 1, 0)
                             textLabel.BackgroundTransparency = 1
-                            textLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
+                            textLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
                             textLabel.TextStrokeTransparency = 0
-                            textLabel.TextSize = 13
-                            textLabel.Font = Enum.Font.GothamBold
+                            textLabel.TextSize = 14
+                            textLabel.Font = Enum.Font.SourceSansBold
                             textLabel.Parent = billboard
                         end
                         billboard.Text.Text = "Weapon: " .. weaponName
                         billboard.Enabled = true
-                    elseif billboard then
-                        billboard.Enabled = false
+                    else
+                        if billboard then
+                            billboard.Enabled = false
+                        end
                     end
                 end
-            elseif char then
-                if char:FindFirstChild("TeamHighlight") then char.TeamHighlight:Destroy() end
-                if char:FindFirstChild("Head") and char.Head:FindFirstChild("WeaponTag") then char.Head.WeaponTag:Destroy() end
+            else
+                if char then
+                    if char:FindFirstChild("TeamHighlight") then
+                        char.TeamHighlight:Destroy()
+                    end
+                    local head = char:FindFirstChild("Head")
+                    if head and head:FindFirstChild("WeaponTag") then
+                        head.WeaponTag:Destroy()
+                    end
+                end
             end
         end
     end
@@ -1510,15 +1513,22 @@ RunService.RenderStepped:Connect(function()
                 if CanTargetByRankFull(LocalPlayer, player) then
                     local head = player.Character.Head
                     if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
-                        if (localRoot.Position - player.Character.HumanoidRootPart.Position).Magnitude <= MaxAimlockDistance then
+                        local targetRootPart = player.Character.HumanoidRootPart
+                        if (localRoot.Position - targetRootPart.Position).Magnitude <= MaxAimlockDistance then
                             local origin = Camera.CFrame.Position
-                            local result = Workspace:Raycast(origin, head.Position - origin, RaycastParams.new({FilterType = Enum.RaycastFilterType.Exclude, FilterDescendantsInstances = {LocalPlayer.Character, Camera}}))
-                            if not result or result.Instance:IsDescendantOf(head.Parent) then
+                            local direction = (head.Position - origin)
+                            local raycastParams = RaycastParams.new()
+                            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+                            local result = Workspace:Raycast(origin, direction, raycastParams)
+                            local isVisible = not result or result.Instance:IsDescendantOf(head.Parent)
+
+                            if isVisible then
                                 local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
                                 if onScreen then
-                                    local dist = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
-                                    if dist < shortestDistance then
-                                        shortestDistance = dist
+                                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
+                                    if distance < shortestDistance then
+                                        shortestDistance = distance
                                         closestPlayer = player
                                     end
                                 end
