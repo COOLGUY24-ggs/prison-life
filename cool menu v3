@@ -1,0 +1,1536 @@
+-- ==============================================================================
+-- Name: Luaroblox_helper
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v10.4 - Toggles)
+-- ==============================================================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+-- Remove old GUI if present
+if CoreGui:FindFirstChild("LuarobloxCustomHub") then
+    CoreGui.LuarobloxCustomHub:Destroy()
+end
+
+-- Custom UI Setup with Neon/Cyberpunk Style
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LuarobloxCustomHub"
+ScreenGui.Parent = CoreGui
+ScreenGui.Enabled = true
+
+-- Main Frame (Menu)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 580, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -290, 0.5, -210)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(0, 255, 204)
+MainStroke.Thickness = 2.5
+MainStroke.Parent = MainFrame
+
+-- Topbar (Title & Glowing Neon Effect)
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 45)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 12)
+TopBarCorner.Parent = TopBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -100, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
+TitleLabel.TextSize = 17
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Text = "⚡ Luaroblox_helper Cyber Hub | Prison Life v10.4"
+TitleLabel.Parent = TopBar
+
+-- Make Draggable Function
+local function MakeDraggable(btn)
+    local dragging, dragInput, dragStart, startPos
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = btn.Position
+        end
+    end)
+    btn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- Minimize/Toggle UI Button
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 45, 0, 45)
+ToggleButton.Position = UDim2.new(0, 20, 0, 20)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 204)
+ToggleButton.TextSize = 20
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Text = "⚡"
+ToggleButton.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.Parent = ToggleButton
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(0, 255, 204)
+ToggleStroke.Thickness = 2
+ToggleStroke.Parent = ToggleButton
+
+MakeDraggable(ToggleButton)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Sidebar for Categories (Tabs)
+local Sidebar = Instance.new("ScrollingFrame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 150, 1, -45)
+Sidebar.Position = UDim2.new(0, 0, 0, 45)
+Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+Sidebar.BorderSizePixel = 0
+Sidebar.CanvasSize = UDim2.new(0, 0, 0, 350)
+Sidebar.ScrollBarThickness = 4
+Sidebar.Parent = MainFrame
+
+local UIListLayoutSidebar = Instance.new("UIListLayout")
+UIListLayoutSidebar.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayoutSidebar.Padding = UDim.new(0, 6)
+UIListLayoutSidebar.Parent = Sidebar
+
+local Container = Instance.new("Folder")
+Container.Name = "TabContainers"
+Container.Parent = MainFrame
+
+local activeTab = nil
+local tabFrames = {}
+local tabButtonsList = {}
+
+local function CreateCustomTab(name, iconText)
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Size = UDim2.new(1, -12, 0, 38)
+    tabBtn.Position = UDim2.new(0, 6, 0, 0)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
+    tabBtn.TextColor3 = Color3.fromRGB(160, 160, 180)
+    tabBtn.TextSize = 14
+    tabBtn.Font = Enum.Font.GothamBold
+    tabBtn.Text = "   " .. iconText .. "  " .. name
+    tabBtn.TextXAlignment = Enum.TextXAlignment.Left
+    tabBtn.Parent = Sidebar
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = tabBtn
+
+    local activeIndicator = Instance.new("Frame")
+    activeIndicator.Name = "ActiveIndicator"
+    activeIndicator.Size = UDim2.new(0, 4, 0, 22)
+    activeIndicator.Position = UDim2.new(0, 0, 0.5, -11)
+    activeIndicator.BackgroundColor3 = Color3.fromRGB(0, 255, 204)
+    activeIndicator.BorderSizePixel = 0
+    activeIndicator.Visible = false
+    activeIndicator.Parent = tabBtn
+
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(1, 0)
+    indicatorCorner.Parent = activeIndicator
+
+    local tabScroll = Instance.new("ScrollingFrame")
+    tabScroll.Name = name .. "Tab"
+    tabScroll.Size = UDim2.new(1, -160, 1, -55)
+    tabScroll.Position = UDim2.new(0, 155, 0, 50)
+    tabScroll.BackgroundTransparency = 1
+    tabScroll.BorderSizePixel = 0
+    tabScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    tabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    tabScroll.ScrollBarThickness = 4
+    tabScroll.Visible = false
+    tabScroll.Parent = MainFrame
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
+    listLayout.Parent = tabScroll
+
+    table.insert(tabButtonsList, {Button = tabBtn, Indicator = activeIndicator})
+
+    tabBtn.MouseButton1Click:Connect(function()
+        for _, frame in pairs(tabFrames) do
+            frame.Visible = false
+        end
+        for _, item in ipairs(tabButtonsList) do
+            item.Indicator.Visible = false
+            item.Button.TextColor3 = Color3.fromRGB(160, 160, 180)
+            TweenService:Create(item.Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 38)}):Play()
+        end
+        
+        tabScroll.Visible = true
+        activeIndicator.Visible = true
+        tabBtn.TextColor3 = Color3.fromRGB(0, 255, 204)
+        TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(32, 32, 48)}):Play()
+        
+        activeTab = tabScroll
+    end)
+
+    if not activeTab then
+        tabScroll.Visible = true
+        activeIndicator.Visible = true
+        tabBtn.TextColor3 = Color3.fromRGB(0, 255, 204)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 48)
+        activeTab = tabScroll
+    end
+
+    table.insert(tabFrames, tabScroll)
+    return tabScroll
+end
+
+local MainTab = CreateCustomTab("Main", "⚡")
+local CombatTab = CreateCustomTab("Combat", "⚔️")
+local VehicleTab = CreateCustomTab("Vehicle", "🚗")
+local GuiTab = CreateCustomTab("Mobile/GUI", "📱")
+local VisualsTab = CreateCustomTab("Visuals", "👁️")
+local SettingsTab = CreateCustomTab("Settings", "⚙️")
+
+-- Special HUB Dashboard Banner
+local function AddDashboardBanner(parent)
+    local banner = Instance.new("Frame")
+    banner.Size = UDim2.new(1, -12, 0, 85)
+    banner.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
+    banner.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = banner
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(0, 255, 204)
+    stroke.Thickness = 1.5
+    stroke.Parent = banner
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -15, 0, 25)
+    title.Position = UDim2.new(0, 10, 0, 8)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = Color3.fromRGB(0, 255, 204)
+    title.TextSize = 14
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Text = "🔥 Status: ACTIVE HUB (Secure Connection)"
+    title.Parent = banner
+
+    local statsLabel = Instance.new("TextLabel")
+    statsLabel.Size = UDim2.new(1, -15, 0, 40)
+    statsLabel.Position = UDim2.new(0, 10, 0, 32)
+    statsLabel.BackgroundTransparency = 1
+    statsLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+    statsLabel.TextSize = 12
+    statsLabel.Font = Enum.Font.GothamMedium
+    statsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    statsLabel.TextYAlignment = Enum.TextYAlignment.Top
+    statsLabel.TextWrapped = true
+    statsLabel.Text = "FPS: 60 | Ping: 0ms | Player: " .. LocalPlayer.Name
+    statsLabel.Parent = banner
+
+    task.spawn(function()
+        local lastUpdate = tick()
+        local frameCount = 0
+        local currentFPS = 60
+        
+        RunService.RenderStepped:Connect(function(dt)
+            frameCount = frameCount + 1
+            if tick() - lastUpdate >= 1 then
+                currentFPS = frameCount
+                frameCount = 0
+                lastUpdate = tick()
+            end
+            
+            local pingVal = 0
+            pcall(function()
+                pingVal = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+            end)
+            
+            statsLabel.Text = string.format("FPS: %d | Ping: %dms | Status: Online", currentFPS, pingVal)
+        end)
+    end)
+end
+
+AddDashboardBanner(MainTab)
+
+-- Element Creators with Clean Rayfield-Style Toggles
+local function AddToggle(parent, text, default, callback)
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Size = UDim2.new(1, -12, 0, 38)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleBtn.TextSize = 14
+    toggleBtn.Font = Enum.Font.GothamBold
+    toggleBtn.Text = "  " .. text
+    toggleBtn.TextXAlignment = Enum.TextXAlignment.Left
+    toggleBtn.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = toggleBtn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(50, 50, 70)
+    stroke.Thickness = 1.5
+    stroke.Parent = toggleBtn
+
+    -- Rayfield-style Toggle Switch visual on the right
+    local switchBg = Instance.new("Frame")
+    switchBg.Size = UDim2.new(0, 44, 0, 22)
+    switchBg.Position = UDim2.new(1, -52, 0.5, -11)
+    switchBg.BackgroundColor3 = default and Color3.fromRGB(0, 255, 204) or Color3.fromRGB(35, 35, 50)
+    switchBg.BorderSizePixel = 0
+    switchBg.Parent = toggleBtn
+
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(1, 0)
+    switchCorner.Parent = switchBg
+
+    local switchCircle = Instance.new("Frame")
+    switchCircle.Size = UDim2.new(0, 16, 0, 16)
+    switchCircle.Position = default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+    switchCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    switchCircle.BorderSizePixel = 0
+    switchCircle.Parent = switchBg
+
+    local circleCorner = Instance.new("UICorner")
+    circleCorner.CornerRadius = UDim.new(1, 0)
+    circleCorner.Parent = switchCircle
+
+    local state = default
+    toggleBtn.MouseButton1Click:Connect(function()
+        state = not state
+        
+        TweenService:Create(switchBg, TweenInfo.new(0.2), {
+            BackgroundColor3 = state and Color3.fromRGB(0, 255, 204) or Color3.fromRGB(35, 35, 50)
+        }):Play()
+
+        TweenService:Create(switchCircle, TweenInfo.new(0.2), {
+            Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+        }):Play()
+
+        callback(state)
+    end)
+end
+
+local function AddButton(parent, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -12, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = "  " .. text
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(70, 70, 100)
+    stroke.Thickness = 1.5
+    stroke.Parent = btn
+
+    btn.MouseButton1Click:Connect(callback)
+end
+
+local function AddSlider(parent, text, min, max, default, suffix, callback)
+    local sliderContainer = Instance.new("Frame")
+    sliderContainer.Size = UDim2.new(1, -12, 0, 60)
+    sliderContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    sliderContainer.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = sliderContainer
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -15, 0, 25)
+    label.Position = UDim2.new(0, 8, 0, 5)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(220, 220, 240)
+    label.TextSize = 13
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = "  " .. text .. ": " .. default .. suffix
+    label.Parent = sliderContainer
+
+    local sliderButton = Instance.new("TextButton")
+    sliderButton.Size = UDim2.new(1, -20, 0, 16)
+    sliderButton.Position = UDim2.new(0, 10, 0, 35)
+    sliderButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    sliderButton.Text = ""
+    sliderButton.Parent = sliderContainer
+
+    local sliderCorner = Instance.new("UICorner")
+    sliderCorner.CornerRadius = UDim.new(0, 6)
+    sliderCorner.Parent = sliderButton
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(0, 255, 204)
+    fill.BorderSizePixel = 0
+    fill.Parent = sliderButton
+
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(0, 6)
+    fillCorner.Parent = fill
+
+    local dragging = false
+    sliderButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local pos = math.clamp((input.Position.X - sliderButton.AbsolutePosition.X) / sliderButton.AbsoluteSize.X, 0, 1)
+            fill.Size = UDim2.new(pos, 0, 1, 0)
+            local val = math.floor(min + ((max - min) * pos))
+            label.Text = "  " .. text .. ": " .. val .. suffix
+            callback(val)
+        end
+    end)
+end
+
+-- Variables
+local AimlockEnabled = false
+local TeamCheckEnabled = true
+local ESPEnabled = false
+local AutoMeleeEnabled = false
+local AutoShootEnabled = false
+local AutoWeaponsEnabled = false
+local JoystickFlyEnabled = false
+local FlySpeed = 50
+local FOVRadius = 500
+local DashDistance = 10
+local GlitchDistance = 10
+local MaxAimlockDistance = 300
+local speedEnabled = false
+local speedMultiplier = 50
+
+-- Feature Toggle States
+local AutoCarEnabled = false
+local AutoCarSpawnerStayEnabled = false
+local AutoSingleTaserEnabled = false
+local AutoBuffedTaserEnabled = false
+local AutoArrestEnabled = false
+
+-- Settings Variables
+local RainbowEnabled = false
+local RainbowSpeed = 2
+local SoundEnabled = true
+local CurrentTheme = "Dark"
+local CurrentSize = "Normal"
+
+local flyConnection = nil
+local lastGlitchTime = 0
+local lastCarClickTime = 0
+local CooldownTime = 2.0
+local isTaserOrArresting = false
+local lastMeleeTime = 0
+
+local isBuffedTaserRunning = false
+local lastBuffedTaserTime = 0
+local BuffedTaserCooldown = 25.0
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false
+fovCircle.Radius = FOVRadius
+fovCircle.Color = Color3.fromRGB(0, 255, 204)
+fovCircle.Thickness = 1.5
+fovCircle.Filled = false
+fovCircle.Transparency = 0.8
+
+local function PlayNotificationSound()
+    if not SoundEnabled then return end
+    pcall(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://9061274288"
+        sound.Volume = 0.5
+        sound.Parent = CoreGui
+        sound:Play()
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
+    end)
+end
+
+local function GetCurrentVehiclePart()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.SeatPart then
+        return humanoid.SeatPart
+    end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        for _, child in ipairs(rootPart:GetChildren()) do
+            if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+                local part0 = child.Part0
+                local part1 = child.Part1
+                local otherPart = (part0 == rootPart) and part1 or part0
+                if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
+                    return otherPart
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function IsInVehicle()
+    return GetCurrentVehiclePart() ~= nil
+end
+
+-- ==================== MAIN TAB ====================
+AddToggle(MainTab, "Auto Get Weapons", false, function(Value)
+    AutoWeaponsEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(MainTab, "Team Check (Smart Rank Filter)", true, function(Value)
+    TeamCheckEnabled = Value
+    PlayNotificationSound()
+end)
+
+-- ==================== COMBAT TAB ====================
+AddToggle(CombatTab, "Aimlock Mouse Circle (FOV)", false, function(Value)
+    AimlockEnabled = Value
+    fovCircle.Visible = Value
+    PlayNotificationSound()
+end)
+
+AddSlider(CombatTab, "Circle Size", 100, 2000, 500, "px", function(Value)
+    FOVRadius = Value
+    fovCircle.Radius = Value
+end)
+
+AddToggle(CombatTab, "Auto Melee Nearest (20 Studs)", false, function(Value)
+    AutoMeleeEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(CombatTab, "Auto Shoot Taser & Spam Arrest", false, function(Value)
+    AutoShootEnabled = Value
+    PlayNotificationSound()
+end)
+
+-- ==================== VEHICLE TAB ====================
+AddToggle(VehicleTab, "Auto Get Car Loop", false, function(Value)
+    AutoCarEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(VehicleTab, "Auto Get Car (Stay At Spawner Loop)", false, function(Value)
+    AutoCarSpawnerStayEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(VehicleTab, "Enable Vehicle Speed", false, function(Value)
+    speedEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddSlider(VehicleTab, "Speed Multiplier", 10, 200, 50, " Speed", function(Value)
+    speedMultiplier = Value
+end)
+
+AddToggle(VehicleTab, "Vehicle Fly", false, function(Value)
+    JoystickFlyEnabled = Value
+    PlayNotificationSound()
+    if JoystickFlyEnabled then
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+        
+        flyConnection = RunService.RenderStepped:Connect(function()
+            if not JoystickFlyEnabled then return end
+            local vehiclePart = GetCurrentVehiclePart()
+            if vehiclePart then
+                local vehicleModel = vehiclePart.Parent
+                local primaryPart = vehicleModel:IsA("Model") and (vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")) or vehiclePart
+                
+                if not primaryPart:FindFirstChild("FlyBodyVelocity") then
+                    local bv = Instance.new("BodyVelocity")
+                    bv.Name = "FlyBodyVelocity"
+                    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                    bv.Parent = primaryPart
+                    
+                    local bg = Instance.new("BodyGyro")
+                    bg.Name = "FlyBodyGyro"
+                    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                    bg.CFrame = primaryPart.CFrame
+                    bg.Parent = primaryPart
+                end
+                
+                local bv = primaryPart:FindFirstChild("FlyBodyVelocity")
+                local bg = primaryPart:FindFirstChild("FlyBodyGyro")
+                
+                if bv and bg then
+                    local camCFrame = Camera.CFrame
+                    bg.CFrame = camCFrame
+                    local velocity = Vector3.new(0, 0, 0)
+                    local char = LocalPlayer.Character
+                    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+                    
+                    if humanoid then
+                        local moveDirection = humanoid.MoveDirection
+                        if moveDirection.Magnitude > 0 then
+                            local localMove = (camCFrame.RightVector * (moveDirection:Dot(camCFrame.RightVector))) + (camCFrame.LookVector * (moveDirection:Dot(camCFrame.LookVector)))
+                            if localMove.Magnitude > 0 then
+                                velocity = localMove.Unit * FlySpeed
+                            end
+                        end
+                    end
+                    bv.Velocity = velocity
+                end
+            else
+                for _, p in ipairs(Workspace:GetDescendants()) do
+                    if p:IsA("BasePart") and (p.Name == "FlyBodyVelocity" or p.Name == "FlyBodyGyro") then
+                        p:Destroy()
+                    end
+                end
+            end
+        end)
+    else
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+        for _, p in ipairs(Workspace:GetDescendants()) do
+            if p:IsA("BasePart") and (p.Name == "FlyBodyVelocity" or p.Name == "FlyBodyGyro") then
+                p:Destroy()
+            end
+        end
+    end
+end)
+
+AddSlider(VehicleTab, "Fly Speed", 16, 150, 50, " studs/s", function(Value)
+    FlySpeed = Value
+end)
+
+-- ==================== MOBILE / GUI TAB ====================
+AddSlider(GuiTab, "Dash Distance (Studs)", 5, 20, 10, " studs", function(Value)
+    DashDistance = Value
+end)
+
+AddToggle(GuiTab, "Mobile Dash Button", false, function(Value)
+    DashGui.Enabled = Value
+    PlayNotificationSound()
+end)
+
+AddSlider(GuiTab, "Glitch Distance (Studs)", 5, 20, 10, " studs", function(Value)
+    GlitchDistance = Value
+end)
+
+AddToggle(GuiTab, "Mobile Glitch Button", false, function(Value)
+    GlitchGui.Enabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Mobile Taser Button", false, function(Value)
+    TaserGui.Enabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Mobile Arrest Button", false, function(Value)
+    ArrestGui.Enabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Mobile Buffed Taser Button", false, function(Value)
+    BuffedTaserGui.Enabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Auto Single Taser Loop", false, function(Value)
+    AutoSingleTaserEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Auto Buffed Taser Loop", false, function(Value)
+    AutoBuffedTaserEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Auto Arrest Loop", false, function(Value)
+    AutoArrestEnabled = Value
+    PlayNotificationSound()
+end)
+
+-- ==================== VISUALS / ESP TAB ====================
+AddToggle(VisualsTab, "Team ESP (Chams & Tags)", false, function(Value)
+    ESPEnabled = Value
+    PlayNotificationSound()
+    if not Value then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player.Character then
+                if player.Character:FindFirstChild("TeamHighlight") then
+                    player.Character.TeamHighlight:Destroy()
+                end
+                if player.Character:FindFirstChild("Head") and player.Character.Head:FindFirstChild("WeaponTag") then
+                    player.Character.Head.WeaponTag:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- ==================== SETTINGS TAB ====================
+AddButton(SettingsTab, "Menu Size: Normal (580x420)", function()
+    PlayNotificationSound()
+    CurrentSize = "Normal"
+    MainFrame.Size = UDim2.new(0, 580, 0, 420)
+    MainFrame.Position = UDim2.new(0.5, -290, 0.5, -210)
+end)
+
+AddButton(SettingsTab, "Menu Size: Compact (480x340)", function()
+    PlayNotificationSound()
+    CurrentSize = "Compact"
+    MainFrame.Size = UDim2.new(0, 480, 0, 340)
+    MainFrame.Position = UDim2.new(0.5, -240, 0.5, -170)
+end)
+
+AddButton(SettingsTab, "Menu Size: Extra Large (680x500)", function()
+    PlayNotificationSound()
+    CurrentSize = "Extra Large"
+    MainFrame.Size = UDim2.new(0, 680, 0, 500)
+    MainFrame.Position = UDim2.new(0.5, -340, 0.5, -250)
+end)
+
+AddButton(SettingsTab, "Reset Lightning Button Position", function()
+    PlayNotificationSound()
+    ToggleButton.Position = UDim2.new(0, 20, 0, 20)
+end)
+
+AddToggle(SettingsTab, "Rainbow Menu Effect", false, function(Value)
+    RainbowEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddSlider(SettingsTab, "Rainbow Speed", 1, 10, 2, "x", function(Value)
+    RainbowSpeed = Value
+end)
+
+AddButton(SettingsTab, "Theme: Dark (Cyber Neon)", function()
+    PlayNotificationSound()
+    CurrentTheme = "Dark"
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+    TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+    MainStroke.Color = Color3.fromRGB(0, 255, 204)
+end)
+
+AddButton(SettingsTab, "Theme: Light (Modern Clean)", function()
+    PlayNotificationSound()
+    CurrentTheme = "Light"
+    MainFrame.BackgroundColor3 = Color3.fromRGB(240, 240, 245)
+    TopBar.BackgroundColor3 = Color3.fromRGB(220, 220, 230)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(230, 230, 238)
+    MainStroke.Color = Color3.fromRGB(0, 150, 255)
+end)
+
+AddToggle(SettingsTab, "Notification Sound", true, function(Value)
+    SoundEnabled = Value
+    PlayNotificationSound()
+end)
+
+-- GUI Setup for Clean Floating Neon Buttons
+local function CreateNeonButton(name, text, color, position)
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "PrisonHub" .. name .. "Gui"
+    sg.Parent = CoreGui
+    sg.Enabled = false
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 85, 0, 85)
+    btn.Position = position
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    btn.TextColor3 = color
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.Parent = sg
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = btn
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = color
+    stroke.Thickness = 2.5
+    stroke.Parent = btn
+
+    MakeDraggable(btn)
+    return sg, btn
+end
+
+DashGui, DashButton = CreateNeonButton("Dash", "DASH", Color3.fromRGB(0, 255, 204), UDim2.new(0.8, 0, 0.6, 0))
+GlitchGui, GlitchButton = CreateNeonButton("Glitch", "GLITCH", Color3.fromRGB(255, 80, 120), UDim2.new(0.65, 0, 0.6, 0))
+TaserGui, TaserButton = CreateNeonButton("Taser", "TASER", Color3.fromRGB(80, 180, 255), UDim2.new(0.5, 0, 0.6, 0))
+ArrestGui, ArrestButton = CreateNeonButton("Arrest", "ARREST", Color3.fromRGB(255, 200, 50), UDim2.new(0.35, 0, 0.6, 0))
+BuffedTaserGui, BuffedTaserButton = CreateNeonButton("BuffedTaser", "BUFFED\nTASER", Color3.fromRGB(180, 100, 255), UDim2.new(0.2, 0, 0.6, 0))
+
+-- Rainbow effect loop
+task.spawn(function()
+    while true do
+        if RainbowEnabled then
+            local hue = (tick() * RainbowSpeed * 0.1) % 1
+            local rainbowColor = Color3.fromHSV(hue, 1, 1)
+            MainStroke.Color = rainbowColor
+            ToggleStroke.Color = rainbowColor
+            ToggleButton.TextColor3 = rainbowColor
+            TitleLabel.TextColor3 = rainbowColor
+        end
+        task.wait(0.05)
+    end
+end)
+
+-- Dash execution function with smooth animation
+local isDashing = false
+DashButton.MouseButton1Click:Connect(function()
+    if isDashing or IsInVehicle() then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    isDashing = true
+    local targetCFrame = rootPart.CFrame + (rootPart.CFrame.LookVector * DashDistance)
+    local tween = TweenService:Create(rootPart, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Connect(function()
+        isDashing = false
+    end)
+end)
+
+-- Glitch execution function with smooth animation
+local isGlitching = false
+GlitchButton.MouseButton1Click:Connect(function()
+    if isGlitching or IsInVehicle() then return end
+    local currentTime = tick()
+    if currentTime - lastGlitchTime < CooldownTime then return end
+    
+    local char = LocalPlayer.Character
+    if not char then return end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    
+    isGlitching = true
+    lastGlitchTime = currentTime
+    local targetCFrame = rootPart.CFrame + Vector3.new(0, GlitchDistance, 0)
+    local tween = TweenService:Create(rootPart, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Connect(function()
+        isGlitching = false
+    end)
+end)
+
+local function IsAlive(player)
+    if not player.Character then return false end
+    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health <= 0 then return false end
+    return player.Character:FindFirstChild("HumanoidRootPart") ~= nil
+end
+
+local function CanTargetByRankSimple(localPlayer, targetPlayer)
+    if not TeamCheckEnabled then return true end
+    local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
+    local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
+    if localTeam ~= "" and localTeam == targetTeam then
+        return false
+    end
+    return true
+end
+
+local function GetEquippedWeaponName(player)
+    if not player.Character then return nil end
+    for _, item in ipairs(player.Character:GetChildren()) do
+        if item:IsA("Tool") then
+            local nameLower = item.Name:lower()
+            if nameLower ~= "breakfast" and nameLower ~= "lunch" and nameLower ~= "soda" and nameLower ~= "dinner" then
+                return item.Name
+            end
+        end
+    end
+    return nil
+end
+
+local function HasIgnoredItem(player)
+    if not player.Character then return false end
+    for _, item in ipairs(player.Character:GetChildren()) do
+        if item:IsA("Tool") then
+            local nameLower = item.Name:lower()
+            if nameLower == "soda" or nameLower == "breakfast" or nameLower == "lunch" or nameLower == "dinner" then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function CanTargetByRankFull(localPlayer, targetPlayer)
+    if not TeamCheckEnabled then return true end
+    local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
+    local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
+    if localTeam ~= "" and localTeam == targetTeam then
+        return false
+    end
+    if localTeam:find("criminal") and targetTeam:find("inmate") then
+        return false
+    end
+    if targetTeam:find("inmate") and HasIgnoredItem(targetPlayer) then
+        return false
+    end
+    if localTeam:find("guard") and targetTeam:find("inmate") and GetEquippedWeaponName(targetPlayer) == nil then
+        return false
+    end
+    return true
+end
+
+local function GetNearestPlayerForMelee()
+    local nearestPlayer, shortestDistance = nil, 20
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankSimple(LocalPlayer, player) then
+            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if enemyRoot then
+                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    nearestPlayer = player
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function GetNearestPlayerForSimpleTaser()
+    local nearestPlayer, shortestDistance = nil, 45
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankSimple(LocalPlayer, player) then
+            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if enemyRoot then
+                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    nearestPlayer = player
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function GetNearestPlayerForArrest()
+    local nearestPlayer, shortestDistance = nil, 25
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankSimple(LocalPlayer, player) then
+            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if enemyRoot then
+                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    nearestPlayer = player
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function GetNearestPlayerForShoot()
+    local nearestPlayer, shortestDistance = nil, 45
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankFull(LocalPlayer, player) then
+            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if enemyRoot then
+                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
+                if dist < shortestDistance then
+                    shortestDistance = dist
+                    nearestPlayer = player
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function GetValidTargetForBuffedTaser()
+    local nearestPlayer, shortestDistance = nil, math.huge
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) then
+            local teamName = player.Team and player.Team.Name:lower() or ""
+            if teamName:find("criminal") then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local dist = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if dist < shortestDistance then
+                        shortestDistance = dist
+                        nearestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
+local function SingleTaserShot()
+    if IsInVehicle() then return end
+    local targetPlayer = GetNearestPlayerForSimpleTaser()
+    if not targetPlayer or not targetPlayer.Character then return end
+    local targetHead = targetPlayer.Character:FindFirstChild("Head")
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHead or not localRoot then return end
+    
+    local char = LocalPlayer.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local taserTool = char and (char:FindFirstChild("Taser") or (backpack and backpack:FindFirstChild("Taser")))
+    
+    if taserTool and humanoid then
+        if char:FindFirstChildOfClass("Tool") ~= taserTool then
+            humanoid:EquipTool(taserTool)
+            task.wait(0.05)
+        end
+        
+        pcall(function()
+            ReplicatedStorage.GunRemotes.ShootEvent:FireServer({{
+                vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                targetHead
+            }})
+        end)
+    end
+end
+
+TaserButton.MouseButton1Click:Connect(function()
+    task.spawn(SingleTaserShot)
+end)
+
+local function BuffedTaserAndArrestAction()
+    local currentTime = tick()
+    if isBuffedTaserRunning or IsInVehicle() or (currentTime - lastBuffedTaserTime < BuffedTaserCooldown) then return end
+    
+    isBuffedTaserRunning = true
+    lastBuffedTaserTime = currentTime
+
+    local targetPlayer = GetValidTargetForBuffedTaser()
+    if not targetPlayer or not targetPlayer.Character then 
+        isBuffedTaserRunning = false
+        return 
+    end
+
+    local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local char = LocalPlayer.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char and char:FindFirstChild("HumanoidRootPart")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    
+    if not targetRoot or not humanoid or not localRoot or not backpack then 
+        isBuffedTaserRunning = false
+        return 
+    end
+
+    local oldCFrame = localRoot.CFrame
+    humanoid.WalkSpeed = 24
+
+    local predictedPosition = targetRoot.Position + (targetRoot.Velocity * 0.25)
+    localRoot.CFrame = CFrame.new(predictedPosition - (targetRoot.CFrame.LookVector * 4) + Vector3.new(0, 3, 0), predictedPosition)
+    task.wait(0.15)
+
+    local startTime = tick()
+    while tick() - startTime < 1.5 do
+        if not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            break
+        end
+        local currentEnemyRoot = targetPlayer.Character.HumanoidRootPart
+        humanoid:MoveTo(currentEnemyRoot.Position)
+        if (localRoot.Position - currentEnemyRoot.Position).Magnitude <= 5 then
+            break
+        end
+        task.wait(0.05)
+    end
+
+    humanoid:MoveTo(localRoot.Position)
+
+    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+    if handcuffsTool then
+        humanoid:EquipTool(handcuffsTool)
+        task.wait(0.05)
+        pcall(function()
+            ReplicatedStorage.Remotes.ArrestPlayer:InvokeServer(targetPlayer, 1)
+        end)
+    end
+
+    task.wait(0.2)
+    pcall(function()
+        localRoot.CFrame = oldCFrame
+    end)
+    humanoid.WalkSpeed = 16
+    isBuffedTaserRunning = false
+end
+
+BuffedTaserButton.MouseButton1Click:Connect(function()
+    task.spawn(BuffedTaserAndArrestAction)
+end)
+
+local function SingleArrestAction()
+    if IsInVehicle() then return end
+    local targetPlayer = GetNearestPlayerForArrest()
+    if not targetPlayer or not targetPlayer.Character then return end
+    
+    local char = LocalPlayer.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local handcuffsTool = char and (char:FindFirstChild("Handcuffs") or backpack and backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack and backpack:FindFirstChild("Handcuff"))
+    
+    if handcuffsTool and humanoid then
+        if char:FindFirstChildOfClass("Tool") ~= handcuffsTool then
+            humanoid:EquipTool(handcuffsTool)
+            task.wait(0.1)
+        end
+        pcall(function()
+            ReplicatedStorage.Remotes.ArrestPlayer:InvokeServer(targetPlayer, 1)
+        end)
+    end
+end
+
+ArrestButton.MouseButton1Click:Connect(function()
+    task.spawn(SingleArrestAction)
+end)
+
+local function ExecuteTaserAndSpamArrest(targetPlayer)
+    if isTaserOrArresting or IsInVehicle() then return end
+    if not targetPlayer or not targetPlayer.Character then return end
+    local targetHead = targetPlayer.Character:FindFirstChild("Head")
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHead or not localRoot then return end
+    
+    local char = LocalPlayer.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    
+    isTaserOrArresting = true
+    local taserTool = char and (char:FindFirstChild("Taser") or backpack and backpack:FindFirstChild("Taser"))
+    
+    if taserTool and humanoid then
+        if char:FindFirstChildOfClass("Tool") ~= taserTool then
+            humanoid:EquipTool(taserTool)
+            task.wait(0.1)
+        end
+        
+        local shootArgs = {{{
+            vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+            vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+            targetHead
+        }}}
+        
+        pcall(function()
+            local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+            if gunRemotes then
+                for i = 1, 4 do
+                    if IsInVehicle() then break end
+                    gunRemotes.ShootEvent:FireServer(unpack(shootArgs))
+                    task.wait(0.08)
+                end
+                if gunRemotes:FindFirstChild("FuncReload") then
+                    gunRemotes.FuncReload:InvokeServer()
+                end
+            end
+        end)
+    end
+    
+    local handcuffsTool = char and (char:FindFirstChild("Handcuffs") or backpack and backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack and backpack:FindFirstChild("Handcuff"))
+    if handcuffsTool and not IsInVehicle() and humanoid then
+        humanoid:EquipTool(handcuffsTool)
+        task.wait(0.1)
+        
+        pcall(function()
+            local arrestEvent = ReplicatedStorage.Remotes.ArrestPlayer
+            for i = 1, 6 do
+                if IsInVehicle() or not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
+                if (localRoot.Position - targetPlayer.Character.HumanoidRootPart.Position).Magnitude > 13 then break end
+                arrestEvent:InvokeServer(targetPlayer, 1)
+                task.wait(0.1)
+            end
+        end)
+    end
+    isTaserOrArresting = false
+end
+
+-- Auto Car Loop (Get Car)
+task.spawn(function()
+    while true do
+        if AutoCarEnabled and not IsInVehicle() then
+            local currentTime = tick()
+            if currentTime - lastCarClickTime >= 2.0 then
+                lastCarClickTime = currentTime
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if char then
+                        local rootPart = char:FindFirstChild("HumanoidRootPart")
+                        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+                        if rootPart and buttonsFolder then
+                            local nearestSpawner, shortestDist = nil, math.huge
+                            for _, item in ipairs(buttonsFolder:GetChildren()) do
+                                local carSpawnerPart = item:FindFirstChild("Car Spawner")
+                                if carSpawnerPart then
+                                    local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
+                                    if partPos then
+                                        local dist = (rootPart.Position - partPos).Magnitude
+                                        if dist < shortestDist then
+                                            shortestDist = dist
+                                            nearestSpawner = carSpawnerPart
+                                        end
+                                    end
+                                end
+                            end
+                            if nearestSpawner then
+                                local oldCFrame = rootPart.CFrame
+                                local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+                                rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
+                                task.wait(0.2)
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
+                                task.wait(0.8)
+                                local foundSeat = nil
+                                for _, obj in ipairs(Workspace:GetDescendants()) do
+                                    if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 60 then
+                                        foundSeat = obj
+                                        break
+                                    end
+                                end
+                                if foundSeat then
+                                    rootPart.CFrame = foundSeat.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.2)
+                                    foundSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
+                                end
+                                rootPart.CFrame = oldCFrame
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- Auto Car Spawner Stay Loop
+task.spawn(function()
+    while true do
+        if AutoCarSpawnerStayEnabled and not IsInVehicle() then
+            local currentTime = tick()
+            if currentTime - lastCarClickTime >= 2.0 then
+                lastCarClickTime = currentTime
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if char then
+                        local rootPart = char:FindFirstChild("HumanoidRootPart")
+                        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+                        if rootPart and buttonsFolder then
+                            local nearestSpawner, shortestDist = nil, math.huge
+                            for _, item in ipairs(buttonsFolder:GetChildren()) do
+                                local carSpawnerPart = item:FindFirstChild("Car Spawner")
+                                if carSpawnerPart then
+                                    local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
+                                    if partPos then
+                                        local dist = (rootPart.Position - partPos).Magnitude
+                                        if dist < shortestDist then
+                                            shortestDist = dist
+                                            nearestSpawner = carSpawnerPart
+                                        end
+                                    end
+                                end
+                            end
+                            if nearestSpawner then
+                                local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+                                rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
+                                task.wait(0.2)
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
+                                task.wait(0.8)
+                                local success, targetSeat = pcall(function()
+                                    return Workspace.CarContainer:GetChildren()[5].Body:GetChildren()[4]
+                                end)
+                                if success and targetSeat and (targetSeat:IsA("VehicleSeat") or targetSeat:IsA("Seat")) then
+                                    rootPart.CFrame = targetSeat.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.2)
+                                    targetSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- Auto Loops for Action Toggles
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if AutoSingleTaserEnabled then
+            pcall(SingleTaserShot)
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if AutoBuffedTaserEnabled then
+            pcall(BuffedTaserAndArrestAction)
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        if AutoArrestEnabled then
+            pcall(SingleArrestAction)
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if speedEnabled then
+            local vehiclePart = GetCurrentVehiclePart()
+            if vehiclePart then
+                local primaryPart = vehiclePart.Parent:IsA("Model") and (vehiclePart.Parent.PrimaryPart or vehiclePart) or vehiclePart
+                if primaryPart then
+                    primaryPart.Velocity = primaryPart.CFrame.LookVector * speedMultiplier
+                end
+            end
+        end
+    end
+end)
+
+local function HasWeaponInInventoryOrCharacter(weaponName)
+    local char = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    return (char and char:FindFirstChild(weaponName)) or (backpack and backpack:FindFirstChild(weaponName))
+end
+
+task.spawn(function()
+    while true do
+        if AutoWeaponsEnabled and not IsInVehicle() then
+            local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
+            if not currentTeam:find("criminal") then
+                local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
+                local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
+                
+                if not (hasRemington and hasMP5) then
+                    local char = LocalPlayer.Character
+                    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local oldCFrame = rootPart.CFrame
+                        rootPart.CFrame = CFrame.new(817, 98, 2222)
+                        task.wait(0.4)
+                        
+                        pcall(function()
+                            if not hasMP5 then
+                                ReplicatedStorage.Remotes.InteractWithItem:InvokeServer(Workspace.Prison_ITEMS.giver.MP5["Meshes/MP5 (2)"])
+                                task.wait(0.3)
+                            end
+                            if not hasRemington then
+                                ReplicatedStorage.Remotes.InteractWithItem:InvokeServer(Workspace.Prison_ITEMS.giver["Remington 870"]["Meshes/r870_2"])
+                                task.wait(0.3)
+                            end
+                        end)
+                        
+                        rootPart.CFrame = oldCFrame
+                    end
+                end
+            end
+        end
+        task.wait(2)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    local mousePos = UserInputService:GetMouseLocation()
+    fovCircle.Position = mousePos
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+    if IsInVehicle() then return end
+
+    if AutoMeleeEnabled then
+        local currentTime = tick()
+        if currentTime - lastMeleeTime >= 0.2 then
+            lastMeleeTime = currentTime
+            local nearestTarget = GetNearestPlayerForMelee()
+            if nearestTarget then
+                pcall(function()
+                    ReplicatedStorage.meleeEvent:FireServer(nearestTarget, 1, 1)
+                end)
+            end
+        end
+    end
+
+    if AutoShootEnabled and localRoot and not isTaserOrArresting then
+        local target = GetNearestPlayerForShoot()
+        if target then
+            task.spawn(function()
+                ExecuteTaserAndSpamArrest(target)
+            end)
+        end
+    end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local char = player.Character
+            if ESPEnabled and IsAlive(player) and char then
+                local head = char:FindFirstChild("Head")
+                local highlight = char:FindFirstChild("TeamHighlight")
+                local weaponName = GetEquippedWeaponName(player)
+                local teamName = player.Team and player.Team.Name or ""
+                local isCriminal = teamName:lower():find("criminal") ~= nil
+
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "TeamHighlight"
+                    highlight.Adornee = char
+                    highlight.Parent = char
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                end
+                
+                highlight.FillColor = isCriminal and Color3.fromRGB(255, 60, 60) or (teamName:lower():find("guard") and Color3.fromRGB(60, 120, 255) or (teamName:lower():find("inmate") and Color3.fromRGB(255, 165, 0) or Color3.fromRGB(255, 255, 255)))
+
+                if head then
+                    local billboard = head:FindFirstChild("WeaponTag")
+                    if weaponName and not isCriminal then
+                        if not billboard then
+                            billboard = Instance.new("BillboardGui")
+                            billboard.Name = "WeaponTag"
+                            billboard.Size = UDim2.new(0, 200, 0, 50)
+                            billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                            billboard.AlwaysOnTop = true
+                            billboard.Parent = head
+
+                            local textLabel = Instance.new("TextLabel")
+                            textLabel.Name = "Text"
+                            textLabel.Size = UDim2.new(1, 0, 1, 0)
+                            textLabel.BackgroundTransparency = 1
+                            textLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
+                            textLabel.TextStrokeTransparency = 0
+                            textLabel.TextSize = 13
+                            textLabel.Font = Enum.Font.GothamBold
+                            textLabel.Parent = billboard
+                        end
+                        billboard.Text.Text = "Weapon: " .. weaponName
+                        billboard.Enabled = true
+                    elseif billboard then
+                        billboard.Enabled = false
+                    end
+                end
+            elseif char then
+                if char:FindFirstChild("TeamHighlight") then char.TeamHighlight:Destroy() end
+                if char:FindFirstChild("Head") and char.Head:FindFirstChild("WeaponTag") then char.Head.WeaponTag:Destroy() end
+            end
+        end
+    end
+
+    if AimlockEnabled then
+        local closestPlayer = nil
+        local shortestDistance = FOVRadius
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
+                if CanTargetByRankFull(LocalPlayer, player) then
+                    local head = player.Character.Head
+                    if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
+                        if (localRoot.Position - player.Character.HumanoidRootPart.Position).Magnitude <= MaxAimlockDistance then
+                            local origin = Camera.CFrame.Position
+                            local result = Workspace:Raycast(origin, head.Position - origin, RaycastParams.new({FilterType = Enum.RaycastFilterType.Exclude, FilterDescendantsInstances = {LocalPlayer.Character, Camera}}))
+                            if not result or result.Instance:IsDescendantOf(head.Parent) then
+                                local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
+                                if onScreen then
+                                    local dist = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
+                                    if dist < shortestDistance then
+                                        shortestDistance = dist
+                                        closestPlayer = player
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character.Head.Position)
+        end
+    end
+end)
