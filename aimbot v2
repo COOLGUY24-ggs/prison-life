@@ -48,6 +48,7 @@ local lastGlitchTime = 0
 local lastCarClickTime = 0
 local CooldownTime = 2.0
 local isTaserOrArresting = false
+local lastMeleeTime = 0
 
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = false
@@ -777,6 +778,30 @@ local function CanTargetByRankFull(localPlayer, targetPlayer)
     return true
 end
 
+-- Functie om de dichtstbijzijnde speler te vinden binnen 20 studs voor melee binnen team check
+local function GetNearestPlayerForMelee()
+    local nearestPlayer = nil
+    local shortestDistance = 20
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) then
+            if CanTargetByRankSimple(LocalPlayer, player) then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
 local function GetNearestPlayerForSimpleTaser()
     local nearestPlayer = nil
     local shortestDistance = 45
@@ -1051,42 +1076,50 @@ local function HasWeaponInInventoryOrCharacter(weaponName)
     return false
 end
 
+-- Aangepaste Auto Get Weapons loop met Team Check (Criminals check)
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
-            local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
-            local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
+            -- Controleer of de speler op het "Criminals" team zit
+            local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
+            local isCriminal = currentTeam:find("criminal") ~= nil
             
-            if not (hasRemington and hasMP5) then
-                local char = LocalPlayer.Character
-                local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+            -- Alleen doorgaan als we NIET op het Criminals team zitten
+            if not isCriminal then
+                local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
+                local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
                 
-                if rootPart then
-                    local oldCFrame = rootPart.CFrame
-                    rootPart.CFrame = CFrame.new(817, 98, 2222)
-                    task.wait(0.4)
+                if not (hasRemington and hasMP5) then
+                    local char = LocalPlayer.Character
+                    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
                     
-                    if not hasMP5 then
-                        pcall(function()
-                            local mp5Args = {
-                                Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)")
-                            }
-                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(mp5Args))
-                        end)
-                        task.wait(0.3)
+                    if rootPart then
+                        local oldCFrame = rootPart.CFrame
+                        rootPart.CFrame = CFrame.new(817, 98, 2222)
+                        task.wait(0.4)
+                        
+                        if not hasMP5 then
+                            pcall(function()
+                                local mp5Args = {
+                                    Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)")
+                                }
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(mp5Args))
+                            end)
+                            task.wait(0.3)
+                        end
+                        
+                        if not hasRemington then
+                            pcall(function()
+                                local r870Args = {
+                                    Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2")
+                                }
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(r870Args))
+                            end)
+                            task.wait(0.3)
+                        end
+                        
+                        rootPart.CFrame = oldCFrame
                     end
-                    
-                    if not hasRemington then
-                        pcall(function()
-                            local r870Args = {
-                                Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2")
-                            }
-                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(r870Args))
-                        end)
-                        task.wait(0.3)
-                    end
-                    
-                    rootPart.CFrame = oldCFrame
                 end
             end
         end
@@ -1105,7 +1138,21 @@ RunService.RenderStepped:Connect(function()
     end
 
     if AutoMeleeEnabled then
-        local target = GetNearestPlayerForShoot()
+        local currentTime = tick()
+        if currentTime - lastMeleeTime >= 0.2 then -- Cooldown om spam te limiteren
+            lastMeleeTime = currentTime
+            local nearestTarget = GetNearestPlayerForMelee()
+            if nearestTarget then
+                pcall(function()
+                    local meleeArgs = {
+                        nearestTarget,
+                        1,
+                        1
+                    }
+                    ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(unpack(meleeArgs))
+                end)
+            end
+        end
     end
 
     if AutoShootEnabled and localRoot and not isTaserOrArresting then
