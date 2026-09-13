@@ -737,7 +737,7 @@ local function GetEquippedWeaponName(player)
     for _, item in ipairs(player.Character:GetChildren()) do
         if item:IsA("Tool") then
             local nameLower = item.Name:lower()
-            if nameLower ~= "breakfast" and nameLower ~= "lunch" and nameLower ~= "soda" then
+            if nameLower ~= "breakfast" and nameLower ~= "lunch" and nameLower ~= "soda" and nameLower ~= "dinner" then
                 return item.Name
             end
         end
@@ -749,8 +749,8 @@ local function HasIgnoredItem(player)
     if not player.Character then return false end
     for _, item in ipairs(player.Character:GetChildren()) do
         if item:IsA("Tool") then
-            local name = item.Name
-            if name == "Soda" or name == "BreakFast" or name == "Breakfast" or name == "Lunch" then
+            local nameLower = item.Name:lower()
+            if nameLower == "soda" or nameLower == "breakfast" or nameLower == "lunch" or nameLower == "dinner" then
                 return true
             end
         end
