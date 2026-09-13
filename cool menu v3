@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Name: Luaroblox_helper
--- Project: Prison Script Update (Cyberpunk Ultimate Hub v10.5 - Clean & Optimized)
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v10.8 - Enhanced UI & Search)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -56,7 +56,7 @@ MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 16)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
@@ -73,19 +73,42 @@ TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
 local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 12)
+TopBarCorner.CornerRadius = UDim.new(0, 16)
 TopBarCorner.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, -100, 1, 0)
+TitleLabel.Size = UDim2.new(0, 240, 1, 0)
 TitleLabel.Position = UDim2.new(0, 15, 0, 0)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
-TitleLabel.TextSize = 17
+TitleLabel.TextSize = 15
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Text = "⚡ Luaroblox_helper Cyber Hub | Prison Life v10.5"
+TitleLabel.Text = "⚡ Luaroblox | Prison Life v10.8"
 TitleLabel.Parent = TopBar
+
+-- Search Bar in TopBar
+local SearchBox = Instance.new("TextBox")
+SearchBox.Name = "SearchBox"
+SearchBox.Size = UDim2.new(0, 140, 0, 28)
+SearchBox.Position = UDim2.new(0, 225, 0.5, -14)
+SearchBox.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+SearchBox.TextColor3 = Color3.fromRGB(240, 240, 255)
+SearchBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 140)
+SearchBox.PlaceholderText = "🔍 Search features..."
+SearchBox.TextSize = 12
+SearchBox.Font = Enum.Font.GothamMedium
+SearchBox.ClearTextOnFocus = false
+SearchBox.Parent = TopBar
+
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0, 6)
+SearchCorner.Parent = SearchBox
+
+local SearchStroke = Instance.new("UIStroke")
+SearchStroke.Color = Color3.fromRGB(45, 45, 65)
+SearchStroke.Thickness = 1
+SearchStroke.Parent = SearchBox
 
 -- Make Draggable Function
 local function MakeDraggable(btn)
@@ -110,7 +133,7 @@ local function MakeDraggable(btn)
     end)
 end
 
--- Minimize/Toggle UI Button with lightning emoji pinning toggle
+-- Minimize/Toggle UI Button (Lightning Emoji) - Hidden by default until X is clicked
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0, 45, 0, 45)
@@ -120,10 +143,11 @@ ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 204)
 ToggleButton.TextSize = 20
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.Text = "⚡"
+ToggleButton.Visible = false
 ToggleButton.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.CornerRadius = UDim.new(0, 12)
 ToggleCorner.Parent = ToggleButton
 
 local ToggleStroke = Instance.new("UIStroke")
@@ -133,8 +157,73 @@ ToggleStroke.Parent = ToggleButton
 
 MakeDraggable(ToggleButton)
 
+-- Topbar Action Buttons (Right side: Fullscreen & Close/X)
+local FullscreenButton = Instance.new("TextButton")
+FullscreenButton.Name = "FullscreenButton"
+FullscreenButton.Size = UDim2.new(0, 32, 0, 32)
+FullscreenButton.Position = UDim2.new(1, -75, 0.5, -16)
+FullscreenButton.BackgroundColor3 = Color3.fromRGB(28, 28, 40)
+FullscreenButton.TextColor3 = Color3.fromRGB(200, 200, 220)
+FullscreenButton.TextSize = 14
+FullscreenButton.Font = Enum.Font.GothamBold
+FullscreenButton.Text = "🗖"
+FullscreenButton.Parent = TopBar
+
+local FSBtnCorner = Instance.new("UICorner")
+FSBtnCorner.CornerRadius = UDim.new(0, 8)
+FSBtnCorner.Parent = FullscreenButton
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 32, 0, 32)
+CloseButton.Position = UDim2.new(1, -38, 0.5, -16)
+CloseButton.BackgroundColor3 = Color3.fromRGB(45, 20, 25)
+CloseButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+CloseButton.TextSize = 14
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "✕"
+CloseButton.Parent = TopBar
+
+local CloseBtnCorner = Instance.new("UICorner")
+CloseBtnCorner.CornerRadius = UDim.new(0, 8)
+CloseBtnCorner.Parent = CloseButton
+
+-- Fullscreen Toggle Logic
+local isFullscreen = false
+local normalSize = UDim2.new(0, 580, 0, 420)
+local normalPos = UDim2.new(0.5, -290, 0.5, -210)
+
+FullscreenButton.MouseButton1Click:Connect(function()
+    isFullscreen = not isFullscreen
+    if isFullscreen then
+        normalSize = MainFrame.Size
+        normalPos = MainFrame.Position
+        MainFrame.Draggable = false
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0.9, 0, 0.9, 0),
+            Position = UDim2.new(0.05, 0, 0.05, 0)
+        }):Play()
+        FullscreenButton.Text = "🗗"
+    else
+        MainFrame.Draggable = true
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            Size = normalSize,
+            Position = normalPos
+        }):Play()
+        FullscreenButton.Text = "🗖"
+    end
+end)
+
+-- Close Button Logic (Hides Menu & Shows Floating Lightning Button)
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    ToggleButton.Visible = true
+end)
+
+-- Lightning Button Click (Opens Menu & Hides Lightning Button)
 ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+    MainFrame.Visible = true
+    ToggleButton.Visible = false
 end)
 
 -- Sidebar for Categories (Tabs)
@@ -156,6 +245,7 @@ UIListLayoutSidebar.Parent = Sidebar
 local activeTab = nil
 local tabFrames = {}
 local tabButtonsList = {}
+local registeredElements = {} -- For search feature
 
 local function CreateCustomTab(name, iconText)
     local tabBtn = Instance.new("TextButton")
@@ -170,7 +260,7 @@ local function CreateCustomTab(name, iconText)
     tabBtn.Parent = Sidebar
 
     local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.CornerRadius = UDim.new(0, 10)
     btnCorner.Parent = tabBtn
 
     local activeIndicator = Instance.new("Frame")
@@ -242,6 +332,25 @@ local GuiTab = CreateCustomTab("Mobile / GUI", "📱")
 local VisualsTab = CreateCustomTab("Visuals", "👁️")
 local SettingsTab = CreateCustomTab("Settings", "⚙️")
 
+-- Search Functionality Logic
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local query = SearchBox.Text:lower()
+    if query == "" then
+        for _, item in ipairs(registeredElements) do
+            item.Parent.Visible = true
+        end
+        return
+    end
+    
+    for _, item in ipairs(registeredElements) do
+        if item.NameText:find(query) then
+            item.Parent.Visible = true
+        else
+            item.Parent.Visible = false
+        end
+    end
+end)
+
 -- Special HUB Dashboard Banner
 local function AddDashboardBanner(parent)
     local banner = Instance.new("Frame")
@@ -250,7 +359,7 @@ local function AddDashboardBanner(parent)
     banner.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = banner
 
     local stroke = Instance.new("UIStroke")
@@ -307,30 +416,32 @@ end
 
 AddDashboardBanner(MainTab)
 
--- Element Creators with Clean Style
+-- Element Creators with Search Integration
 local function AddToggle(parent, text, default, callback)
     local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Size = UDim2.new(1, -12, 0, 38)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleBtn.Size = UDim2.new(1, -12, 0, 42)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    toggleBtn.TextColor3 = Color3.fromRGB(240, 240, 255)
     toggleBtn.TextSize = 14
     toggleBtn.Font = Enum.Font.GothamBold
     toggleBtn.Text = "  " .. text
     toggleBtn.TextXAlignment = Enum.TextXAlignment.Left
     toggleBtn.Parent = parent
 
+    table.insert(registeredElements, {Parent = toggleBtn, NameText = text:lower()})
+
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = toggleBtn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(50, 50, 70)
+    stroke.Color = Color3.fromRGB(45, 45, 65)
     stroke.Thickness = 1.5
     stroke.Parent = toggleBtn
 
     local switchBg = Instance.new("Frame")
-    switchBg.Size = UDim2.new(0, 44, 0, 22)
-    switchBg.Position = UDim2.new(1, -52, 0.5, -11)
+    switchBg.Size = UDim2.new(0, 46, 0, 24)
+    switchBg.Position = UDim2.new(1, -54, 0.5, -12)
     switchBg.BackgroundColor3 = default and Color3.fromRGB(0, 255, 204) or Color3.fromRGB(35, 35, 50)
     switchBg.BorderSizePixel = 0
     switchBg.Parent = toggleBtn
@@ -340,8 +451,8 @@ local function AddToggle(parent, text, default, callback)
     switchCorner.Parent = switchBg
 
     local switchCircle = Instance.new("Frame")
-    switchCircle.Size = UDim2.new(0, 16, 0, 16)
-    switchCircle.Position = default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+    switchCircle.Size = UDim2.new(0, 18, 0, 18)
+    switchCircle.Position = default and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
     switchCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     switchCircle.BorderSizePixel = 0
     switchCircle.Parent = switchBg
@@ -354,12 +465,12 @@ local function AddToggle(parent, text, default, callback)
     toggleBtn.MouseButton1Click:Connect(function()
         state = not state
         
-        TweenService:Create(switchBg, TweenInfo.new(0.2), {
+        TweenService:Create(switchBg, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
             BackgroundColor3 = state and Color3.fromRGB(0, 255, 204) or Color3.fromRGB(35, 35, 50)
         }):Play()
 
-        TweenService:Create(switchCircle, TweenInfo.new(0.2), {
-            Position = state and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+        TweenService:Create(switchCircle, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {
+            Position = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
         }):Play()
 
         callback(state)
@@ -368,21 +479,23 @@ end
 
 local function AddButton(parent, text, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -12, 0, 38)
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Size = UDim2.new(1, -12, 0, 42)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    btn.TextColor3 = Color3.fromRGB(240, 240, 255)
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
     btn.Text = "  " .. text
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Parent = parent
 
+    table.insert(registeredElements, {Parent = btn, NameText = text:lower()})
+
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = btn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(70, 70, 100)
+    stroke.Color = Color3.fromRGB(60, 60, 90)
     stroke.Thickness = 1.5
     stroke.Parent = btn
 
@@ -391,34 +504,41 @@ end
 
 local function AddSlider(parent, text, min, max, default, suffix, callback)
     local sliderContainer = Instance.new("Frame")
-    sliderContainer.Size = UDim2.new(1, -12, 0, 60)
-    sliderContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    sliderContainer.Size = UDim2.new(1, -12, 0, 65)
+    sliderContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     sliderContainer.Parent = parent
 
+    table.insert(registeredElements, {Parent = sliderContainer, NameText = text:lower()})
+
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = sliderContainer
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(40, 40, 60)
+    stroke.Thickness = 1
+    stroke.Parent = sliderContainer
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -15, 0, 25)
-    label.Position = UDim2.new(0, 8, 0, 5)
+    label.Position = UDim2.new(0, 10, 0, 6)
     label.BackgroundTransparency = 1
     label.TextColor3 = Color3.fromRGB(220, 220, 240)
     label.TextSize = 13
     label.Font = Enum.Font.GothamBold
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Text = "  " .. text .. ": " .. default .. suffix
+    label.Text = text .. ": " .. default .. suffix
     label.Parent = sliderContainer
 
     local sliderButton = Instance.new("TextButton")
     sliderButton.Size = UDim2.new(1, -20, 0, 16)
-    sliderButton.Position = UDim2.new(0, 10, 0, 35)
-    sliderButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    sliderButton.Position = UDim2.new(0, 10, 0, 38)
+    sliderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
     sliderButton.Text = ""
     sliderButton.Parent = sliderContainer
 
     local sliderCorner = Instance.new("UICorner")
-    sliderCorner.CornerRadius = UDim.new(0, 6)
+    sliderCorner.CornerRadius = UDim.new(0, 8)
     sliderCorner.Parent = sliderButton
 
     local fill = Instance.new("Frame")
@@ -428,7 +548,7 @@ local function AddSlider(parent, text, min, max, default, suffix, callback)
     fill.Parent = sliderButton
 
     local fillCorner = Instance.new("UICorner")
-    fillCorner.CornerRadius = UDim.new(0, 6)
+    fillCorner.CornerRadius = UDim.new(0, 8)
     fillCorner.Parent = fill
 
     local dragging = false
@@ -449,7 +569,7 @@ local function AddSlider(parent, text, min, max, default, suffix, callback)
             local pos = math.clamp((input.Position.X - sliderButton.AbsolutePosition.X) / sliderButton.AbsoluteSize.X, 0, 1)
             fill.Size = UDim2.new(pos, 0, 1, 0)
             local val = math.floor(min + ((max - min) * pos))
-            label.Text = "  " .. text .. ": " .. val .. suffix
+            label.Text = text .. ": " .. val .. suffix
             callback(val)
         end
     end)
@@ -617,7 +737,7 @@ AddButton(VehicleTab, "Get Car", function()
     end)
 end)
 
-AddButton(VehicleTab, "Get Car (Stay At Spawner)", function()
+AddButton(VehicleTab, "Get Car (Find Nearest Spawner & No Teleport Back)", function()
     PlayNotificationSound()
     local currentTime = tick()
     if currentTime - lastCarClickTime < 2.0 then return end
@@ -1462,7 +1582,8 @@ local function BuffedTaserAndArrestAction()
         localRoot.CFrame = oldCFrame
     end)
     
-    humanoid.WalkSpeed = 16
+    -- Snelheid na de actie ingesteld op 22 in plaats van 16
+    humanoid.WalkSpeed = 22
     isBuffedTaserRunning = false
 end
 
@@ -1507,112 +1628,6 @@ ArrestButton.MouseButton1Click:Connect(function()
     task.spawn(SingleArrestAction)
 end)
 
-local function ExecuteTaserAndSpamArrest(targetPlayer)
-    if isTaserOrArresting or IsInVehicle() then return end
-    if not targetPlayer or not targetPlayer.Character then return end
-    local targetHead = targetPlayer.Character:FindFirstChild("Head")
-    local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not targetHead or not targetRoot then return end
-    
-    local char = LocalPlayer.Character
-    if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    local localRoot = char:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not localRoot then return end
-    
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    if not backpack then return end
-    
-    isTaserOrArresting = true
-    
-    local currentTool = char:FindFirstChildOfClass("Tool")
-    local taserTool = char:FindFirstChild("Taser") or backpack:FindFirstChild("Taser")
-    
-    if taserTool then
-        if currentTool ~= taserTool then
-            humanoid:EquipTool(taserTool)
-            task.wait(0.1)
-        end
-        
-        local shootArgs = {
-            {
-                {
-                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-                    targetHead
-                }
-            }
-        }
-        
-        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
-        if gunRemotes then
-            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
-            if shootEvent then
-                for i = 1, 4 do
-                    if IsInVehicle() then break end
-                    pcall(function()
-                        shootEvent:FireServer(unpack(shootArgs))
-                    end)
-                    task.wait(0.08)
-                end
-            end
-            
-            local funcReload = gunRemotes:FindFirstChild("FuncReload")
-            if funcReload then
-                pcall(function()
-                    funcReload:InvokeServer()
-                end)
-            end
-        end
-    end
-    
-    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
-    if handcuffsTool and not IsInVehicle() then
-        humanoid:EquipTool(handcuffsTool)
-        task.wait(0.1)
-        
-        local arrestArgs = {
-            targetPlayer,
-            1
-        }
-        
-        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
-        
-        if arrestEvent then
-            for i = 1, 6 do
-                if IsInVehicle() or not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
-                local currentDistance = (localRoot.Position - targetPlayer.Character.HumanoidRootPart.Position).Magnitude
-                if currentDistance > 13 then
-                    break
-                end
-                
-                pcall(function()
-                    arrestEvent:InvokeServer(unpack(arrestArgs))
-                end)
-                task.wait(0.1)
-            end
-        end
-    end
-    
-    isTaserOrArresting = false
-end
-
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if speedEnabled then
-            local vehiclePart = GetCurrentVehiclePartGlobal()
-            if vehiclePart then
-                local vehicle = vehiclePart.Parent
-                local primaryPart = vehicle.PrimaryPart or vehiclePart
-                if primaryPart then
-                    primaryPart.Velocity = primaryPart.CFrame.LookVector * speedMultiplier
-                end
-            end
-        end
-    end
-end)
-
 local function HasWeaponInInventoryOrCharacter(weaponName)
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:FindFirstChild("Backpack")
@@ -1636,32 +1651,8 @@ task.spawn(function()
                     local rootPart = char and char:FindFirstChild("HumanoidRootPart")
                     
                     if rootPart then
-                        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
-                        local nearestSpawner = nil
-                        local shortestDist = math.huge
-                        
-                        if buttonsFolder then
-                            for _, item in ipairs(buttonsFolder:GetChildren()) do
-                                local spawnerPart = item:FindFirstChild("Car Spawner") or item:FindFirstChildWhichIsA("BasePart")
-                                if spawnerPart then
-                                    local partPos = spawnerPart:IsA("BasePart") and spawnerPart.Position or spawnerPart:GetPivot().Position
-                                    local dist = (rootPart.Position - partPos).Magnitude
-                                    if dist < shortestDist then
-                                        shortestDist = dist
-                                        nearestSpawner = spawnerPart
-                                    end
-                                end
-                            end
-                        end
-                        
                         local oldCFrame = rootPart.CFrame
-                        if nearestSpawner then
-                            local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
-                            rootPart.CFrame = CFrame.new(spawnerPos)
-                        else
-                            rootPart.CFrame = CFrame.new(817, 98, 2222)
-                        end
-                        
+                        rootPart.CFrame = CFrame.new(817, 98, 2222)
                         task.wait(0.4)
                         
                         if not hasMP5 then
@@ -1693,15 +1684,27 @@ task.spawn(function()
     end
 end)
 
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if speedEnabled then
+            local vehiclePart = GetCurrentVehiclePartGlobal()
+            if vehiclePart then
+                local vehicle = vehiclePart.Parent
+                local primaryPart = vehicle.PrimaryPart or vehiclePart
+                if primaryPart then
+                    primaryPart.Velocity = primaryPart.CFrame.LookVector * speedMultiplier
+                end
+            end
+        end
+    end
+end)
+
 RunService.RenderStepped:Connect(function()
     local mousePos = UserInputService:GetMouseLocation()
     fovCircle.Position = mousePos
 
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-    if LightningPinnedToMenu then
-        ToggleButton.Position = MainFrame.Position + UDim2.new(0, -55, 0, 0)
-    end
 
     if IsInVehicle() then
         return
@@ -1722,15 +1725,6 @@ RunService.RenderStepped:Connect(function()
                     ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(unpack(meleeArgs))
                 end)
             end
-        end
-    end
-
-    if AutoShootEnabled and localRoot and not isTaserOrArresting then
-        local target = GetNearestPlayerForShoot()
-        if target then
-            task.spawn(function()
-                ExecuteTaserAndSpamArrest(target)
-            end)
         end
     end
 
