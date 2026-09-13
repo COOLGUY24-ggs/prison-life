@@ -159,20 +159,41 @@ VehicleTab:CreateButton({
             local rootPart = char:FindFirstChild("HumanoidRootPart")
             if not rootPart then return end
             
-            local oldCFrame = rootPart.CFrame
+            local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+            if not buttonsFolder then return end
             
-            -- Teleporteer naar de knop om de auto te spawnen
-            rootPart.CFrame = CFrame.new(-193, 55, 1882)
+            local nearestSpawner = nil
+            local shortestDist = math.huge
+            
+            for _, item in ipairs(buttonsFolder:GetChildren()) do
+                local carSpawnerPart = item:FindFirstChild("Car Spawner")
+                if carSpawnerPart then
+                    local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
+                    if partPos then
+                        local dist = (rootPart.Position - partPos).Magnitude
+                        if dist < shortestDist then
+                            shortestDist = dist
+                            nearestSpawner = carSpawnerPart
+                        end
+                    end
+                end
+            end
+            
+            if not nearestSpawner then return end
+            
+            local oldCFrame = rootPart.CFrame
+            local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+            
+            rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
             task.wait(0.2)
             
             local carArgs = {
-                workspace:WaitForChild("Prison_ITEMS"):WaitForChild("buttons"):WaitForChild("Car Spawner"):WaitForChild("Car Spawner")
+                nearestSpawner
             }
             pcall(function()
                 ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(carArgs))
             end)
             
-            -- Wacht langer zodat de server de wielen en het voertuig volledig laadt
             task.wait(0.8)
             
             local foundSeat = nil
@@ -191,6 +212,68 @@ VehicleTab:CreateButton({
             end
             
             rootPart.CFrame = oldCFrame
+        end)
+    end,
+})
+
+VehicleTab:CreateButton({
+    Name = "Get Car (Stay At Spawner)",
+    Callback = function()
+        local currentTime = tick()
+        if currentTime - lastCarClickTime < 2.0 then return end
+        lastCarClickTime = currentTime
+
+        task.spawn(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            local rootPart = char:FindFirstChild("HumanoidRootPart")
+            if not rootPart then return end
+            
+            local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+            if not buttonsFolder then return end
+            
+            local nearestSpawner = nil
+            local shortestDist = math.huge
+            
+            for _, item in ipairs(buttonsFolder:GetChildren()) do
+                local carSpawnerPart = item:FindFirstChild("Car Spawner")
+                if carSpawnerPart then
+                    local partPos = carSpawnerPart:IsA("BasePart") and carSpawnerPart.Position or (carSpawnerPart:IsA("Model") and carSpawnerPart:GetPivot().Position)
+                    if partPos then
+                        local dist = (rootPart.Position - partPos).Magnitude
+                        if dist < shortestDist then
+                            shortestDist = dist
+                            nearestSpawner = carSpawnerPart
+                        end
+                    end
+                end
+            end
+            
+            if not nearestSpawner then return end
+            
+            local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+            
+            rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
+            task.wait(0.2)
+            
+            local carArgs = {
+                nearestSpawner
+            }
+            pcall(function()
+                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(carArgs))
+            end)
+            
+            task.wait(0.8)
+            
+            local success, targetSeat = pcall(function()
+                return Workspace.CarContainer:GetChildren()[5].Body:GetChildren()[4]
+            end)
+            
+            if success and targetSeat and (targetSeat:IsA("VehicleSeat") or targetSeat:IsA("Seat")) then
+                rootPart.CFrame = targetSeat.CFrame + Vector3.new(0, 3, 0)
+                task.wait(0.2)
+                targetSeat:Sit(char:FindFirstChildOfClass("Humanoid"))
+            end
         end)
     end,
 })
@@ -367,6 +450,15 @@ GuiTab:CreateToggle({
     end,
 })
 
+GuiTab:CreateToggle({
+    Name = "Mobile/Movable Arrest Button",
+    CurrentValue = false,
+    Flag = "ArrestButtonToggle",
+    Callback = function(Value)
+        ArrestGui.Enabled = Value
+    end,
+})
+
 -- ==================== VISUALS / ESP TAB ====================
 VisualsTab:CreateToggle({
     Name = "Team ESP (Criminals/Guards/Inmates)",
@@ -467,6 +559,32 @@ UIStrokeTaser.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeTaser.Thickness = 3
 UIStrokeTaser.Parent = TaserButton
 
+-- Arrest GUI Setup
+ArrestGui = Instance.new("ScreenGui")
+ArrestGui.Name = "PrisonHubArrestGui"
+ArrestGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+ArrestGui.Enabled = false
+
+local ArrestButton = Instance.new("TextButton")
+ArrestButton.Name = "ArrestButton"
+ArrestButton.Size = UDim2.new(0, 90, 0, 90)
+ArrestButton.Position = UDim2.new(0.35, 0, 0.6, 0)
+ArrestButton.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+ArrestButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+ArrestButton.TextSize = 20
+ArrestButton.Font = Enum.Font.SourceSansBold
+ArrestButton.Text = "ARREST"
+ArrestButton.Parent = ArrestGui
+
+local UICornerArrest = Instance.new("UICorner")
+UICornerArrest.CornerRadius = UDim.new(1, 0)
+UICornerArrest.Parent = ArrestButton
+
+local UIStrokeArrest = Instance.new("UIStroke")
+UIStrokeArrest.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeArrest.Thickness = 3
+UIStrokeArrest.Parent = ArrestButton
+
 -- Dragging logic for Dash Button
 local draggingDash, dragInputDash, dragStartDash, startPosDash
 DashButton.InputBegan:Connect(function(input)
@@ -527,6 +645,27 @@ UserInputService.InputChanged:Connect(function(input)
     if input == dragInputTaser and draggingTaser then
         local delta = input.Position - dragStartTaser
         TaserButton.Position = UDim2.new(startPosTaser.X.Scale, startPosTaser.X.Offset + delta.X, startPosTaser.Y.Scale, startPosTaser.Y.Offset + delta.Y)
+    end
+end)
+
+-- Dragging logic for Arrest Button
+local draggingArrest, dragInputArrest, dragStartArrest, startPosArrest
+ArrestButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingArrest = true
+        dragStartArrest = input.Position
+        startPosArrest = ArrestButton.Position
+    end
+end)
+ArrestButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInputArrest = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInputArrest and draggingArrest then
+        local delta = input.Position - dragStartArrest
+        ArrestButton.Position = UDim2.new(startPosArrest.X.Scale, startPosArrest.X.Offset + delta.X, startPosArrest.Y.Scale, startPosArrest.Y.Offset + delta.Y)
     end
 end)
 
@@ -661,6 +800,29 @@ local function GetNearestPlayerForSimpleTaser()
     return nearestPlayer
 end
 
+local function GetNearestPlayerForArrest()
+    local nearestPlayer = nil
+    local shortestDistance = 25
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) then
+            if CanTargetByRankSimple(LocalPlayer, player) then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
 local function GetNearestPlayerForShoot()
     local nearestPlayer = nil
     local shortestDistance = 45
@@ -734,6 +896,44 @@ end
 
 TaserButton.MouseButton1Click:Connect(function()
     task.spawn(SingleTaserShot)
+end)
+
+-- Enkele arrest-actie (1 poging)
+local function SingleArrestAction()
+    if IsInVehicle() then return end
+    local targetPlayer = GetNearestPlayerForArrest()
+    if not targetPlayer or not targetPlayer.Character then return end
+    
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not humanoid or not backpack then return end
+    
+    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+    if handcuffsTool then
+        local currentTool = char:FindFirstChildOfClass("Tool")
+        if currentTool ~= handcuffsTool then
+            humanoid:EquipTool(handcuffsTool)
+            task.wait(0.1)
+        end
+        
+        local arrestArgs = {
+            targetPlayer,
+            1
+        }
+        
+        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        if arrestEvent then
+            pcall(function()
+                arrestEvent:InvokeServer(unpack(arrestArgs))
+            end)
+        end
+    end
+end
+
+ArrestButton.MouseButton1Click:Connect(function()
+    task.spawn(SingleArrestAction)
 end)
 
 local function ExecuteTaserAndSpamArrest(targetPlayer)
@@ -843,7 +1043,6 @@ task.spawn(function()
     end
 end)
 
--- Task loop for Auto Get Weapons (aangepast: teleporteert naar coördinaten en blijft constant controleren op Remington 870 en MP5)
 local function HasWeaponInInventoryOrCharacter(weaponName)
     local char = LocalPlayer.Character
     local backpack = LocalPlayer:FindFirstChild("Backpack")
@@ -858,7 +1057,6 @@ task.spawn(function()
             local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
             local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
             
-            -- Als hij mist, teleporteer naar coördinaten en pak ze
             if not (hasRemington and hasMP5) then
                 local char = LocalPlayer.Character
                 local rootPart = char and char:FindFirstChild("HumanoidRootPart")
