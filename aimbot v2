@@ -177,7 +177,6 @@ VehicleTab:CreateButton({
             
             local foundSeat = nil
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                -- Zoek specifiek naar een VehicleSeat (bestuurdersstoel) en controleer of de naam of hiërarchie duidt op de bestuurderskant
                 if obj:IsA("VehicleSeat") and (obj.Position - rootPart.Position).Magnitude < 60 then
                     foundSeat = obj
                     break
@@ -844,25 +843,56 @@ task.spawn(function()
     end
 end)
 
--- Task loop for Auto Get Weapons
+-- Task loop for Auto Get Weapons (aangepast: teleporteert naar coördinaten en blijft constant controleren op Remington 870 en MP5)
+local function HasWeaponInInventoryOrCharacter(weaponName)
+    local char = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if char and char:FindFirstChild(weaponName) then return true end
+    if backpack and backpack:FindFirstChild(weaponName) then return true end
+    return false
+end
+
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
-            pcall(function()
-                local mp5Args = {
-                    Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)")
-                }
-                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(mp5Args))
-            end)
-            task.wait(0.5)
-            pcall(function()
-                local r870Args = {
-                    Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2")
-                }
-                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(r870Args))
-            end)
+            local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
+            local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
+            
+            -- Als hij mist, teleporteer naar coördinaten en pak ze
+            if not (hasRemington and hasMP5) then
+                local char = LocalPlayer.Character
+                local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if rootPart then
+                    local oldCFrame = rootPart.CFrame
+                    rootPart.CFrame = CFrame.new(817, 98, 2222)
+                    task.wait(0.4)
+                    
+                    if not hasMP5 then
+                        pcall(function()
+                            local mp5Args = {
+                                Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)")
+                            }
+                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(mp5Args))
+                        end)
+                        task.wait(0.3)
+                    end
+                    
+                    if not hasRemington then
+                        pcall(function()
+                            local r870Args = {
+                                Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2")
+                            }
+                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(r870Args))
+                        end)
+                        task.wait(0.3)
+                    end
+                    
+                    rootPart.CFrame = oldCFrame
+                end
+            end
         end
-        task.wait(3)
+        task.wait(2)
     end
 end)
 
