@@ -1,3 +1,8 @@
+-- ==============================================================================
+-- Name: Luaroblox_helper
+-- Project: Prison Script Update
+-- ==============================================================================
+
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -49,6 +54,11 @@ local lastCarClickTime = 0
 local CooldownTime = 2.0
 local isTaserOrArresting = false
 local lastMeleeTime = 0
+
+-- Cooldown variabele voor de Buffed Taser & Arrest knop (25 seconden)
+local isBuffedTaserRunning = false
+local lastBuffedTaserTime = 0
+local BuffedTaserCooldown = 25.0
 
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = false
@@ -460,6 +470,15 @@ GuiTab:CreateToggle({
     end,
 })
 
+GuiTab:CreateToggle({
+    Name = "Mobile/Movable Buffed Taser & Arrest Button",
+    CurrentValue = false,
+    Flag = "BuffedTaserButtonToggle",
+    Callback = function(Value)
+        BuffedTaserGui.Enabled = Value
+    end,
+})
+
 -- ==================== VISUALS / ESP TAB ====================
 VisualsTab:CreateToggle({
     Name = "Team ESP (Criminals/Guards/Inmates)",
@@ -586,6 +605,32 @@ UIStrokeArrest.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeArrest.Thickness = 3
 UIStrokeArrest.Parent = ArrestButton
 
+-- Buffed Taser & Arrest GUI Setup (Met zwarte tekstkleur)
+BuffedTaserGui = Instance.new("ScreenGui")
+BuffedTaserGui.Name = "PrisonHubBuffedTaserGui"
+BuffedTaserGui.Parent = game:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
+BuffedTaserGui.Enabled = false
+
+local BuffedTaserButton = Instance.new("TextButton")
+BuffedTaserButton.Name = "BuffedTaserButton"
+BuffedTaserButton.Size = UDim2.new(0, 90, 0, 90)
+BuffedTaserButton.Position = UDim2.new(0.2, 0, 0.6, 0)
+BuffedTaserButton.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
+BuffedTaserButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+BuffedTaserButton.TextSize = 13
+BuffedTaserButton.Font = Enum.Font.SourceSansBold
+BuffedTaserButton.Text = "BUFFED\nTASER"
+BuffedTaserButton.Parent = BuffedTaserGui
+
+local UICornerBuffedTaser = Instance.new("UICorner")
+UICornerBuffedTaser.CornerRadius = UDim.new(1, 0)
+UICornerBuffedTaser.Parent = BuffedTaserButton
+
+local UIStrokeBuffedTaser = Instance.new("UIStroke")
+UIStrokeBuffedTaser.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeBuffedTaser.Thickness = 3
+UIStrokeBuffedTaser.Parent = BuffedTaserButton
+
 -- Dragging logic for Dash Button
 local draggingDash, dragInputDash, dragStartDash, startPosDash
 DashButton.InputBegan:Connect(function(input)
@@ -667,6 +712,27 @@ UserInputService.InputChanged:Connect(function(input)
     if input == dragInputArrest and draggingArrest then
         local delta = input.Position - dragStartArrest
         ArrestButton.Position = UDim2.new(startPosArrest.X.Scale, startPosArrest.X.Offset + delta.X, startPosArrest.Y.Scale, startPosArrest.Y.Offset + delta.Y)
+    end
+end)
+
+-- Dragging logic for Buffed Taser Button
+local draggingBuffedTaser, dragInputBuffedTaser, dragStartBuffedTaser, startPosBuffedTaser
+BuffedTaserButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        draggingBuffedTaser = true
+        dragStartBuffedTaser = input.Position
+        startPosBuffedTaser = BuffedTaserButton.Position
+    end
+end)
+BuffedTaserButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInputBuffedTaser = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInputBuffedTaser and draggingBuffedTaser then
+        local delta = input.Position - dragStartBuffedTaser
+        BuffedTaserButton.Position = UDim2.new(startPosBuffedTaser.X.Scale, startPosBuffedTaser.X.Offset + delta.X, startPosBuffedTaser.Y.Scale, startPosBuffedTaser.Y.Offset + delta.Y)
     end
 end)
 
@@ -778,7 +844,6 @@ local function CanTargetByRankFull(localPlayer, targetPlayer)
     return true
 end
 
--- Functie om de dichtstbijzijnde speler te vinden binnen 20 studs voor melee binnen team check
 local function GetNearestPlayerForMelee()
     local nearestPlayer = nil
     local shortestDistance = 20
@@ -871,6 +936,31 @@ local function GetNearestPlayerForShoot()
     return nearestPlayer
 end
 
+-- Zoekt specifiek naar iemand in het team "Criminals"
+local function GetValidTargetForBuffedTaser()
+    local nearestPlayer = nil
+    local shortestDistance = math.huge
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and IsAlive(player) then
+            local teamName = player.Team and player.Team.Name:lower() or ""
+            if teamName:find("criminal") then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return nearestPlayer
+end
+
 local function SingleTaserShot()
     if IsInVehicle() then return end
     local targetPlayer = GetNearestPlayerForSimpleTaser()
@@ -923,7 +1013,113 @@ TaserButton.MouseButton1Click:Connect(function()
     task.spawn(SingleTaserShot)
 end)
 
--- Enkele arrest-actie (1 poging)
+-- Aangepaste functie: Berekent snelheid, voorspelt looprichting, vindt exact de beste locatie en vuurt remotes af
+local function BuffedTaserAndArrestAction()
+    local currentTime = tick()
+    if isBuffedTaserRunning or IsInVehicle() or (currentTime - lastBuffedTaserTime < BuffedTaserCooldown) then return end
+    
+    isBuffedTaserRunning = true
+    lastBuffedTaserTime = currentTime
+
+    local targetPlayer = GetValidTargetForBuffedTaser()
+    if not targetPlayer or not targetPlayer.Character then 
+        isBuffedTaserRunning = false
+        return 
+    end
+
+    local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetRoot then 
+        isBuffedTaserRunning = false
+        return 
+    end
+    
+    local char = LocalPlayer.Character
+    if not char then 
+        isBuffedTaserRunning = false
+        return 
+    end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not localRoot then 
+        isBuffedTaserRunning = false
+        return 
+    end
+    
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then 
+        isBuffedTaserRunning = false
+        return 
+    end
+
+    -- Sla de huidige positie op om later terug te keren
+    local oldCFrame = localRoot.CFrame
+
+    -- Zet snelheid naar 24 tijdens de actie
+    humanoid.WalkSpeed = 24
+
+    -- Stap 1: Bepaal waar hij naartoe loopt (Velocity) en bereken de beste voorspelde locatie
+    local targetVelocity = targetRoot.Velocity
+    local predictedPosition = targetRoot.Position + (targetVelocity * 0.25) -- Voorspel 0.25 seconde vooruit op basis van zijn huidige looprichting en snelheid
+
+    -- Stap 2: Teleporteer direct achter de voorspelde locatie (de exact beste plek om te staan)
+    localRoot.CFrame = CFrame.new(predictedPosition - (targetRoot.CFrame.LookVector * 4) + Vector3.new(0, 3, 0), predictedPosition)
+    task.wait(0.15)
+
+    -- Stap 3: Volg eventuele kleine correcties via MoveTo terwijl we dichtbij zijn
+    local startTime = tick()
+    while tick() - startTime < 1.5 do
+        if not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            break
+        end
+        
+        local currentEnemyRoot = targetPlayer.Character.HumanoidRootPart
+        humanoid:MoveTo(currentEnemyRoot.Position)
+        
+        local dist = (localRoot.Position - currentEnemyRoot.Position).Magnitude
+        if dist <= 5 then
+            break
+        end
+        task.wait(0.05)
+    end
+
+    -- Stop met lopen
+    humanoid:MoveTo(localRoot.Position)
+
+    -- Stap 4: Equipt Handboeien en vuur de arrestatie remote direct af
+    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+    if handcuffsTool then
+        humanoid:EquipTool(handcuffsTool)
+        task.wait(0.05)
+        
+        local arrestArgs = {
+            targetPlayer,
+            1
+        }
+        
+        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        if arrestEvent then
+            pcall(function()
+                arrestEvent:InvokeServer(unpack(arrestArgs))
+            end)
+        end
+    end
+
+    task.wait(0.2)
+
+    -- Stap 5: Ga weer terug naar de startpositie en zet snelheid terug naar normaal (16)
+    pcall(function()
+        localRoot.CFrame = oldCFrame
+    end)
+    
+    humanoid.WalkSpeed = 16
+
+    isBuffedTaserRunning = false
+end
+
+BuffedTaserButton.MouseButton1Click:Connect(function()
+    task.spawn(BuffedTaserAndArrestAction)
+end)
+
 local function SingleArrestAction()
     if IsInVehicle() then return end
     local targetPlayer = GetNearestPlayerForArrest()
@@ -1051,7 +1247,6 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
     isTaserOrArresting = false
 end
 
--- Task loop voor Vehicle Speed aanpassing
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -1076,15 +1271,12 @@ local function HasWeaponInInventoryOrCharacter(weaponName)
     return false
 end
 
--- Aangepaste Auto Get Weapons loop met Team Check (Criminals check)
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
-            -- Controleer of de speler op het "Criminals" team zit
             local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
             local isCriminal = currentTeam:find("criminal") ~= nil
             
-            -- Alleen doorgaan als we NIET op het Criminals team zitten
             if not isCriminal then
                 local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
                 local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
@@ -1139,7 +1331,7 @@ RunService.RenderStepped:Connect(function()
 
     if AutoMeleeEnabled then
         local currentTime = tick()
-        if currentTime - lastMeleeTime >= 0.2 then -- Cooldown om spam te limiteren
+        if currentTime - lastMeleeTime >= 0.2 then
             lastMeleeTime = currentTime
             local nearestTarget = GetNearestPlayerForMelee()
             if nearestTarget then
@@ -1165,15 +1357,15 @@ RunService.RenderStepped:Connect(function()
     end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
+        if player ~= LocalPlayer then
             local char = player.Character
-            local head = char:FindFirstChild("Head")
-            local highlight = char:FindFirstChild("TeamHighlight")
-            local weaponName = GetEquippedWeaponName(player)
-            local teamName = player.Team and player.Team.Name or ""
-            local isCriminal = teamName:lower():find("criminal") ~= nil
+            if ESPEnabled and IsAlive(player) and char then
+                local head = char:FindFirstChild("Head")
+                local highlight = char:FindFirstChild("TeamHighlight")
+                local weaponName = GetEquippedWeaponName(player)
+                local teamName = player.Team and player.Team.Name or ""
+                local isCriminal = teamName:lower():find("criminal") ~= nil
 
-            if ESPEnabled and IsAlive(player) then
                 if not highlight then
                     highlight = Instance.new("Highlight")
                     highlight.Name = "TeamHighlight"
@@ -1222,11 +1414,14 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             else
-                if highlight then
-                    highlight:Destroy()
-                end
-                if head and head:FindFirstChild("WeaponTag") then
-                    head.WeaponTag:Destroy()
+                if char then
+                    if char:FindFirstChild("TeamHighlight") then
+                        char.TeamHighlight:Destroy()
+                    end
+                    local head = char:FindFirstChild("Head")
+                    if head and head:FindFirstChild("WeaponTag") then
+                        head.WeaponTag:Destroy()
+                    end
                 end
             end
         end
