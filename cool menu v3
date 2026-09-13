@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Name: Luaroblox_helper
--- Project: Prison Script Update (Cyberpunk Ultimate Hub v10.4 - Toggles)
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v10.5 - Clean & Optimized)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -18,7 +18,27 @@ if CoreGui:FindFirstChild("LuarobloxCustomHub") then
     CoreGui.LuarobloxCustomHub:Destroy()
 end
 
--- Custom UI Setup with Ultra Cyberpunk Neon / Glassmorphism Style
+if CoreGui:FindFirstChild("PrisonHubDashGui") then
+    CoreGui.PrisonHubDashGui:Destroy()
+end
+
+if CoreGui:FindFirstChild("PrisonHubGlitchGui") then
+    CoreGui.PrisonHubGlitchGui:Destroy()
+end
+
+if CoreGui:FindFirstChild("PrisonHubTaserGui") then
+    CoreGui.PrisonHubTaserGui:Destroy()
+end
+
+if CoreGui:FindFirstChild("PrisonHubArrestGui") then
+    CoreGui.PrisonHubArrestGui:Destroy()
+end
+
+if CoreGui:FindFirstChild("PrisonHubBuffedTaserGui") then
+    CoreGui.PrisonHubBuffedTaserGui:Destroy()
+end
+
+-- Custom UI Setup with Neon/Cyberpunk Style
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LuarobloxCustomHub"
 ScreenGui.Parent = CoreGui
@@ -29,15 +49,14 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 580, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -290, 0.5, -210)
-MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
-MainFrame.BackgroundTransparency = 0.05
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 14)
+MainCorner.CornerRadius = UDim.new(0, 12)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
@@ -45,26 +64,16 @@ MainStroke.Color = Color3.fromRGB(0, 255, 204)
 MainStroke.Thickness = 2.5
 MainStroke.Parent = MainFrame
 
--- Gradient Glow Overlay for MainFrame
-local MainGradient = Instance.new("UIGradient")
-MainGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 204)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 0, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255))
-})
-MainGradient.Rotation = 45
-MainGradient.Parent = MainStroke
-
 -- Topbar (Title & Glowing Neon Effect)
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 45)
-TopBar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainFrame
 
 local TopBarCorner = Instance.new("UICorner")
-TopBarCorner.CornerRadius = UDim.new(0, 14)
+TopBarCorner.CornerRadius = UDim.new(0, 12)
 TopBarCorner.Parent = TopBar
 
 local TitleLabel = Instance.new("TextLabel")
@@ -75,7 +84,7 @@ TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
 TitleLabel.TextSize = 17
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Text = "⚡ Luaroblox_helper Cyber Hub | Prison Life v10.4"
+TitleLabel.Text = "⚡ Luaroblox_helper Cyber Hub | Prison Life v10.5"
 TitleLabel.Parent = TopBar
 
 -- Make Draggable Function
@@ -101,20 +110,20 @@ local function MakeDraggable(btn)
     end)
 end
 
--- Minimize/Toggle UI Button with Lightning Emoji
+-- Minimize/Toggle UI Button with lightning emoji pinning toggle
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0, 45, 0, 45)
 ToggleButton.Position = UDim2.new(0, 20, 0, 20)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
 ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 204)
-ToggleButton.TextSize = 22
+ToggleButton.TextSize = 20
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.Text = "⚡"
 ToggleButton.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 12)
+ToggleCorner.CornerRadius = UDim.new(0, 10)
 ToggleCorner.Parent = ToggleButton
 
 local ToggleStroke = Instance.new("UIStroke")
@@ -133,7 +142,7 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 150, 1, -45)
 Sidebar.Position = UDim2.new(0, 0, 0, 45)
-Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
 Sidebar.BorderSizePixel = 0
 Sidebar.CanvasSize = UDim2.new(0, 0, 0, 350)
 Sidebar.ScrollBarThickness = 4
@@ -144,10 +153,6 @@ UIListLayoutSidebar.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayoutSidebar.Padding = UDim.new(0, 6)
 UIListLayoutSidebar.Parent = Sidebar
 
-local Container = Instance.new("Folder")
-Container.Name = "TabContainers"
-Container.Parent = MainFrame
-
 local activeTab = nil
 local tabFrames = {}
 local tabButtonsList = {}
@@ -156,7 +161,7 @@ local function CreateCustomTab(name, iconText)
     local tabBtn = Instance.new("TextButton")
     tabBtn.Size = UDim2.new(1, -12, 0, 38)
     tabBtn.Position = UDim2.new(0, 6, 0, 0)
-    tabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
     tabBtn.TextColor3 = Color3.fromRGB(160, 160, 180)
     tabBtn.TextSize = 14
     tabBtn.Font = Enum.Font.GothamBold
@@ -207,13 +212,13 @@ local function CreateCustomTab(name, iconText)
         for _, item in ipairs(tabButtonsList) do
             item.Indicator.Visible = false
             item.Button.TextColor3 = Color3.fromRGB(160, 160, 180)
-            TweenService:Create(item.Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(20, 20, 30)}):Play()
+            TweenService:Create(item.Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 38)}):Play()
         end
         
         tabScroll.Visible = true
         activeIndicator.Visible = true
         tabBtn.TextColor3 = Color3.fromRGB(0, 255, 204)
-        TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(28, 28, 42)}):Play()
+        TweenService:Create(tabBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(32, 32, 48)}):Play()
         
         activeTab = tabScroll
     end)
@@ -222,7 +227,7 @@ local function CreateCustomTab(name, iconText)
         tabScroll.Visible = true
         activeIndicator.Visible = true
         tabBtn.TextColor3 = Color3.fromRGB(0, 255, 204)
-        tabBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 42)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(32, 32, 48)
         activeTab = tabScroll
     end
 
@@ -233,7 +238,7 @@ end
 local MainTab = CreateCustomTab("Main", "⚡")
 local CombatTab = CreateCustomTab("Combat", "⚔️")
 local VehicleTab = CreateCustomTab("Vehicle", "🚗")
-local GuiTab = CreateCustomTab("Mobile/GUI", "📱")
+local GuiTab = CreateCustomTab("Mobile / GUI", "📱")
 local VisualsTab = CreateCustomTab("Visuals", "👁️")
 local SettingsTab = CreateCustomTab("Settings", "⚙️")
 
@@ -241,11 +246,11 @@ local SettingsTab = CreateCustomTab("Settings", "⚙️")
 local function AddDashboardBanner(parent)
     local banner = Instance.new("Frame")
     banner.Size = UDim2.new(1, -12, 0, 85)
-    banner.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+    banner.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
     banner.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
+    corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = banner
 
     local stroke = Instance.new("UIStroke")
@@ -302,11 +307,11 @@ end
 
 AddDashboardBanner(MainTab)
 
--- Element Creators with Clean Rayfield-Style Toggles
+-- Element Creators with Clean Style
 local function AddToggle(parent, text, default, callback)
     local toggleBtn = Instance.new("TextButton")
     toggleBtn.Size = UDim2.new(1, -12, 0, 38)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
     toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     toggleBtn.TextSize = 14
     toggleBtn.Font = Enum.Font.GothamBold
@@ -319,7 +324,7 @@ local function AddToggle(parent, text, default, callback)
     corner.Parent = toggleBtn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(45, 45, 65)
+    stroke.Color = Color3.fromRGB(50, 50, 70)
     stroke.Thickness = 1.5
     stroke.Parent = toggleBtn
 
@@ -364,7 +369,7 @@ end
 local function AddButton(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -12, 0, 38)
-    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 42)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.TextSize = 14
     btn.Font = Enum.Font.GothamBold
@@ -377,7 +382,7 @@ local function AddButton(parent, text, callback)
     corner.Parent = btn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(60, 60, 90)
+    stroke.Color = Color3.fromRGB(70, 70, 100)
     stroke.Thickness = 1.5
     stroke.Parent = btn
 
@@ -387,7 +392,7 @@ end
 local function AddSlider(parent, text, min, max, default, suffix, callback)
     local sliderContainer = Instance.new("Frame")
     sliderContainer.Size = UDim2.new(1, -12, 0, 60)
-    sliderContainer.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+    sliderContainer.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
     sliderContainer.Parent = parent
 
     local corner = Instance.new("UICorner")
@@ -408,7 +413,7 @@ local function AddSlider(parent, text, min, max, default, suffix, callback)
     local sliderButton = Instance.new("TextButton")
     sliderButton.Size = UDim2.new(1, -20, 0, 16)
     sliderButton.Position = UDim2.new(0, 10, 0, 35)
-    sliderButton.BackgroundColor3 = Color3.fromRGB(35, 35, 55)
+    sliderButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
     sliderButton.Text = ""
     sliderButton.Parent = sliderContainer
 
@@ -463,18 +468,10 @@ local FOVRadius = 500
 local DashDistance = 10
 local GlitchDistance = 10
 local MaxAimlockDistance = 300
+
+-- Variables for Vehicle Speed
 local speedEnabled = false
 local speedMultiplier = 50
-
--- Feature Toggle States
-local LightningToggleState = false
-
--- Settings Variables
-local RainbowEnabled = false
-local RainbowSpeed = 2
-local SoundEnabled = true
-local CurrentTheme = "Dark"
-local CurrentSize = "Normal"
 
 local flyConnection = nil
 local lastGlitchTime = 0
@@ -483,17 +480,26 @@ local CooldownTime = 2.0
 local isTaserOrArresting = false
 local lastMeleeTime = 0
 
+-- Cooldown variables for the Buffed Taser & Arrest button
 local isBuffedTaserRunning = false
 local lastBuffedTaserTime = 0
 local BuffedTaserCooldown = 25.0
 
+-- Settings Variables
+local RainbowEnabled = false
+local RainbowSpeed = 2
+local SoundEnabled = true
+local CurrentTheme = "Dark"
+local CurrentSize = "Normal"
+local LightningPinnedToMenu = false
+
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = false
 fovCircle.Radius = FOVRadius
-fovCircle.Color = Color3.fromRGB(0, 255, 204)
-fovCircle.Thickness = 1.5
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Thickness = 1
 fovCircle.Filled = false
-fovCircle.Transparency = 0.8
+fovCircle.Transparency = 0.7
 
 local function PlayNotificationSound()
     if not SoundEnabled then return end
@@ -507,33 +513,6 @@ local function PlayNotificationSound()
             sound:Destroy()
         end)
     end)
-end
-
-local function GetCurrentVehiclePart()
-    local char = LocalPlayer.Character
-    if not char then return nil end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if humanoid and humanoid.SeatPart then
-        return humanoid.SeatPart
-    end
-    local rootPart = char:FindFirstChild("HumanoidRootPart")
-    if rootPart then
-        for _, child in ipairs(rootPart:GetChildren()) do
-            if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
-                local part0 = child.Part0
-                local part1 = child.Part1
-                local otherPart = (part0 == rootPart) and part1 or part0
-                if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
-                    return otherPart
-                end
-            end
-        end
-    end
-    return nil
-end
-
-local function IsInVehicle()
-    return GetCurrentVehiclePart() ~= nil
 end
 
 -- ==================== MAIN TAB ====================
@@ -564,13 +543,14 @@ AddToggle(CombatTab, "Auto Melee Nearest (20 Studs)", false, function(Value)
     PlayNotificationSound()
 end)
 
-AddToggle(CombatTab, "Auto Shoot Taser & Spam Arrest", false, function(Value)
+AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, function(Value)
     AutoShootEnabled = Value
     PlayNotificationSound()
 end)
 
 -- ==================== VEHICLE TAB ====================
 AddButton(VehicleTab, "Get Car", function()
+    PlayNotificationSound()
     local currentTime = tick()
     if currentTime - lastCarClickTime < 2.0 then return end
     lastCarClickTime = currentTime
@@ -609,8 +589,11 @@ AddButton(VehicleTab, "Get Car", function()
         rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
         task.wait(0.2)
         
+        local carArgs = {
+            nearestSpawner
+        }
         pcall(function()
-            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(carArgs))
         end)
         
         task.wait(0.8)
@@ -635,6 +618,7 @@ AddButton(VehicleTab, "Get Car", function()
 end)
 
 AddButton(VehicleTab, "Get Car (Stay At Spawner)", function()
+    PlayNotificationSound()
     local currentTime = tick()
     if currentTime - lastCarClickTime < 2.0 then return end
     lastCarClickTime = currentTime
@@ -666,13 +650,17 @@ AddButton(VehicleTab, "Get Car (Stay At Spawner)", function()
         end
         
         if not nearestSpawner then return end
+        
         local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
         
         rootPart.CFrame = CFrame.new(spawnerPos + Vector3.new(0, 3, 0))
         task.wait(0.2)
         
+        local carArgs = {
+            nearestSpawner
+        }
         pcall(function()
-            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(nearestSpawner)
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(carArgs))
         end)
         
         task.wait(0.8)
@@ -698,9 +686,10 @@ AddSlider(VehicleTab, "Speed Multiplier", 10, 200, 50, " Speed", function(Value)
     speedMultiplier = Value
 end)
 
-AddToggle(VehicleTab, "Vehicle Fly", false, function(Value)
+AddToggle(VehicleTab, "Vehicle Fly (Look to Fly Up/Down)", false, function(Value)
     JoystickFlyEnabled = Value
     PlayNotificationSound()
+    
     if JoystickFlyEnabled then
         if flyConnection then
             flyConnection:Disconnect()
@@ -709,10 +698,41 @@ AddToggle(VehicleTab, "Vehicle Fly", false, function(Value)
         
         flyConnection = RunService.RenderStepped:Connect(function()
             if not JoystickFlyEnabled then return end
-            local vehiclePart = GetCurrentVehiclePart()
+            
+            local function GetCurrentVehiclePartLocal()
+                local char = LocalPlayer.Character
+                if not char then return nil end
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                if humanoid and humanoid.SeatPart then
+                    return humanoid.SeatPart
+                end
+                local rootPart = char:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    for _, child in ipairs(rootPart:GetChildren()) do
+                        if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+                            local part0 = child.Part0
+                            local part1 = child.Part1
+                            local otherPart = (part0 == rootPart) and part1 or part0
+                            if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
+                                return otherPart
+                            end
+                        end
+                    end
+                end
+                return nil
+            end
+
+            local vehiclePart = GetCurrentVehiclePartLocal()
             if vehiclePart then
                 local vehicleModel = vehiclePart.Parent
-                local primaryPart = vehicleModel:IsA("Model") and (vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")) or vehiclePart
+                local primaryPart = nil
+                
+                if vehicleModel:IsA("Model") then
+                    primaryPart = vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")
+                end
+                if not primaryPart then
+                    primaryPart = vehiclePart
+                end
                 
                 if not primaryPart:FindFirstChild("FlyBodyVelocity") then
                     local bv = Instance.new("BodyVelocity")
@@ -734,6 +754,7 @@ AddToggle(VehicleTab, "Vehicle Fly", false, function(Value)
                 if bv and bg then
                     local camCFrame = Camera.CFrame
                     bg.CFrame = camCFrame
+                    
                     local velocity = Vector3.new(0, 0, 0)
                     local char = LocalPlayer.Character
                     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
@@ -747,6 +768,7 @@ AddToggle(VehicleTab, "Vehicle Fly", false, function(Value)
                             end
                         end
                     end
+                    
                     bv.Velocity = velocity
                 end
             else
@@ -779,7 +801,7 @@ AddSlider(GuiTab, "Dash Distance (Studs)", 5, 20, 10, " studs", function(Value)
     DashDistance = Value
 end)
 
-AddToggle(GuiTab, "Mobile Dash Button", false, function(Value)
+AddToggle(GuiTab, "Mobile/Movable Dash Button", false, function(Value)
     DashGui.Enabled = Value
     PlayNotificationSound()
 end)
@@ -788,28 +810,28 @@ AddSlider(GuiTab, "Glitch Distance (Studs)", 5, 20, 10, " studs", function(Value
     GlitchDistance = Value
 end)
 
-AddToggle(GuiTab, "Mobile Glitch Button", false, function(Value)
+AddToggle(GuiTab, "Mobile/Movable Glitch Button", false, function(Value)
     GlitchGui.Enabled = Value
     PlayNotificationSound()
 end)
 
-AddToggle(GuiTab, "Mobile Taser Button", false, function(Value)
+AddToggle(GuiTab, "Mobile/Movable Taser Button", false, function(Value)
     TaserGui.Enabled = Value
     PlayNotificationSound()
 end)
 
-AddToggle(GuiTab, "Mobile Arrest Button", false, function(Value)
+AddToggle(GuiTab, "Mobile/Movable Arrest Button", false, function(Value)
     ArrestGui.Enabled = Value
     PlayNotificationSound()
 end)
 
-AddToggle(GuiTab, "Mobile Buffed Taser Button", false, function(Value)
+AddToggle(GuiTab, "Mobile/Movable Buffed Taser & Arrest Button", false, function(Value)
     BuffedTaserGui.Enabled = Value
     PlayNotificationSound()
 end)
 
--- ==================== VISUALS / ESP TAB ====================
-AddToggle(VisualsTab, "Team ESP (Chams & Tags)", false, function(Value)
+-- ==================== VISUALS TAB ====================
+AddToggle(VisualsTab, "Team ESP (Criminals/Guards/Inmates)", false, function(Value)
     ESPEnabled = Value
     PlayNotificationSound()
     if not Value then
@@ -827,16 +849,6 @@ AddToggle(VisualsTab, "Team ESP (Chams & Tags)", false, function(Value)
 end)
 
 -- ==================== SETTINGS TAB ====================
-AddToggle(SettingsTab, "Pin Lightning Emoji Button (Toggle State)", false, function(Value)
-    LightningToggleState = Value
-    PlayNotificationSound()
-    if LightningToggleState then
-        ToggleButton.Text = "⚡ [PINNED]"
-    else
-        ToggleButton.Text = "⚡"
-    end
-end)
-
 AddButton(SettingsTab, "Menu Size: Normal (580x420)", function()
     PlayNotificationSound()
     CurrentSize = "Normal"
@@ -860,7 +872,19 @@ end)
 
 AddButton(SettingsTab, "Reset Lightning Button Position", function()
     PlayNotificationSound()
+    LightningPinnedToMenu = false
     ToggleButton.Position = UDim2.new(0, 20, 0, 20)
+end)
+
+AddToggle(SettingsTab, "Pin Lightning Emoji to Menu", false, function(Value)
+    LightningPinnedToMenu = Value
+    PlayNotificationSound()
+    if LightningPinnedToMenu then
+        ToggleButton.Visible = false
+    else
+        ToggleButton.Visible = true
+        ToggleButton.Position = UDim2.new(0, 20, 0, 20)
+    end
 end)
 
 AddToggle(SettingsTab, "Rainbow Menu Effect", false, function(Value)
@@ -875,9 +899,9 @@ end)
 AddButton(SettingsTab, "Theme: Dark (Cyber Neon)", function()
     PlayNotificationSound()
     CurrentTheme = "Dark"
-    MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
-    TopBar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+    TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
     MainStroke.Color = Color3.fromRGB(0, 255, 204)
 end)
 
@@ -895,42 +919,6 @@ AddToggle(SettingsTab, "Notification Sound", true, function(Value)
     PlayNotificationSound()
 end)
 
--- GUI Setup for Clean Floating Neon Buttons
-local function CreateNeonButton(name, text, color, position)
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "PrisonHub" .. name .. "Gui"
-    sg.Parent = CoreGui
-    sg.Enabled = false
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 85, 0, 85)
-    btn.Position = position
-    btn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-    btn.TextColor3 = color
-    btn.TextSize = 14
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = text
-    btn.Parent = sg
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
-    corner.Parent = btn
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = color
-    stroke.Thickness = 2.5
-    stroke.Parent = btn
-
-    MakeDraggable(btn)
-    return sg, btn
-end
-
-local DashGui, DashButton = CreateNeonButton("Dash", "DASH", Color3.fromRGB(0, 255, 204), UDim2.new(0.8, 0, 0.6, 0))
-local GlitchGui, GlitchButton = CreateNeonButton("Glitch", "GLITCH", Color3.fromRGB(255, 80, 120), UDim2.new(0.65, 0, 0.6, 0))
-local TaserGui, TaserButton = CreateNeonButton("Taser", "TASER", Color3.fromRGB(80, 180, 255), UDim2.new(0.5, 0, 0.6, 0))
-local ArrestGui, ArrestButton = CreateNeonButton("Arrest", "ARREST", Color3.fromRGB(255, 200, 50), UDim2.new(0.35, 0, 0.6, 0))
-local BuffedTaserGui, BuffedTaserButton = CreateNeonButton("BuffedTaser", "BUFFED\nTASER", Color3.fromRGB(180, 100, 255), UDim2.new(0.2, 0, 0.6, 0))
-
 -- Rainbow effect loop
 task.spawn(function()
     while true do
@@ -946,7 +934,171 @@ task.spawn(function()
     end
 end)
 
--- Dash execution function with smooth animation
+local function GetCurrentVehiclePartGlobal()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.SeatPart then
+        return humanoid.SeatPart
+    end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        for _, child in ipairs(rootPart:GetChildren()) do
+            if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+                local part0 = child.Part0
+                local part1 = child.Part1
+                local otherPart = (part0 == rootPart) and part1 or part0
+                if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
+                    return otherPart
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function IsInVehicle()
+    return GetCurrentVehiclePartGlobal() ~= nil
+end
+
+-- Dash GUI Setup
+DashGui = Instance.new("ScreenGui")
+DashGui.Name = "PrisonHubDashGui"
+DashGui.Parent = CoreGui
+DashGui.Enabled = false
+
+local DashButton = Instance.new("TextButton")
+DashButton.Name = "DashButton"
+DashButton.Size = UDim2.new(0, 90, 0, 90)
+DashButton.Position = UDim2.new(0.8, 0, 0.6, 0)
+DashButton.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+DashButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+DashButton.TextSize = 20
+DashButton.Font = Enum.Font.SourceSansBold
+DashButton.Text = "DASH"
+DashButton.Parent = DashGui
+
+local UICornerDash = Instance.new("UICorner")
+UICornerDash.CornerRadius = UDim.new(1, 0)
+UICornerDash.Parent = DashButton
+
+local UIStrokeDash = Instance.new("UIStroke")
+UIStrokeDash.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeDash.Thickness = 3
+UIStrokeDash.Parent = DashButton
+
+-- Glitch GUI Setup
+GlitchGui = Instance.new("ScreenGui")
+GlitchGui.Name = "PrisonHubGlitchGui"
+GlitchGui.Parent = CoreGui
+GlitchGui.Enabled = false
+
+local GlitchButton = Instance.new("TextButton")
+GlitchButton.Name = "GlitchButton"
+GlitchButton.Size = UDim2.new(0, 90, 0, 90)
+GlitchButton.Position = UDim2.new(0.65, 0, 0.6, 0)
+GlitchButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+GlitchButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+GlitchButton.TextSize = 20
+GlitchButton.Font = Enum.Font.SourceSansBold
+GlitchButton.Text = "GLITCH"
+GlitchButton.Parent = GlitchGui
+
+local UICornerGlitch = Instance.new("UICorner")
+UICornerGlitch.CornerRadius = UDim.new(1, 0)
+UICornerGlitch.Parent = GlitchButton
+
+local UIStrokeGlitch = Instance.new("UIStroke")
+UIStrokeGlitch.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeGlitch.Thickness = 3
+UIStrokeGlitch.Parent = GlitchButton
+
+-- Taser GUI Setup
+TaserGui = Instance.new("ScreenGui")
+TaserGui.Name = "PrisonHubTaserGui"
+TaserGui.Parent = CoreGui
+TaserGui.Enabled = false
+
+local TaserButton = Instance.new("TextButton")
+TaserButton.Name = "TaserButton"
+TaserButton.Size = UDim2.new(0, 90, 0, 90)
+TaserButton.Position = UDim2.new(0.5, 0, 0.6, 0)
+TaserButton.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+TaserButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+TaserButton.TextSize = 20
+TaserButton.Font = Enum.Font.SourceSansBold
+TaserButton.Text = "TASER"
+TaserButton.Parent = TaserGui
+
+local UICornerTaser = Instance.new("UICorner")
+UICornerTaser.CornerRadius = UDim.new(1, 0)
+UICornerTaser.Parent = TaserButton
+
+local UIStrokeTaser = Instance.new("UIStroke")
+UIStrokeTaser.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeTaser.Thickness = 3
+UIStrokeTaser.Parent = TaserButton
+
+-- Arrest GUI Setup
+ArrestGui = Instance.new("ScreenGui")
+ArrestGui.Name = "PrisonHubArrestGui"
+ArrestGui.Parent = CoreGui
+ArrestGui.Enabled = false
+
+local ArrestButton = Instance.new("TextButton")
+ArrestButton.Name = "ArrestButton"
+ArrestButton.Size = UDim2.new(0, 90, 0, 90)
+ArrestButton.Position = UDim2.new(0.35, 0, 0.6, 0)
+ArrestButton.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+ArrestButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+ArrestButton.TextSize = 20
+ArrestButton.Font = Enum.Font.SourceSansBold
+ArrestButton.Text = "ARREST"
+ArrestButton.Parent = ArrestGui
+
+local UICornerArrest = Instance.new("UICorner")
+UICornerArrest.CornerRadius = UDim.new(1, 0)
+UICornerArrest.Parent = ArrestButton
+
+local UIStrokeArrest = Instance.new("UIStroke")
+UIStrokeArrest.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeArrest.Thickness = 3
+UIStrokeArrest.Parent = ArrestButton
+
+-- Buffed Taser & Arrest GUI Setup
+BuffedTaserGui = Instance.new("ScreenGui")
+BuffedTaserGui.Name = "PrisonHubBuffedTaserGui"
+BuffedTaserGui.Parent = CoreGui
+BuffedTaserGui.Enabled = false
+
+local BuffedTaserButton = Instance.new("TextButton")
+BuffedTaserButton.Name = "BuffedTaserButton"
+BuffedTaserButton.Size = UDim2.new(0, 90, 0, 90)
+BuffedTaserButton.Position = UDim2.new(0.2, 0, 0.6, 0)
+BuffedTaserButton.BackgroundColor3 = Color3.fromRGB(150, 100, 255)
+BuffedTaserButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+BuffedTaserButton.TextSize = 13
+BuffedTaserButton.Font = Enum.Font.SourceSansBold
+BuffedTaserButton.Text = "BUFFED\nTASER"
+BuffedTaserButton.Parent = BuffedTaserGui
+
+local UICornerBuffedTaser = Instance.new("UICorner")
+UICornerBuffedTaser.CornerRadius = UDim.new(1, 0)
+UICornerBuffedTaser.Parent = BuffedTaserButton
+
+local UIStrokeBuffedTaser = Instance.new("UIStroke")
+UIStrokeBuffedTaser.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeBuffedTaser.Thickness = 3
+UIStrokeBuffedTaser.Parent = BuffedTaserButton
+
+-- Dragging logic for mobile buttons
+MakeDraggable(DashButton)
+MakeDraggable(GlitchButton)
+MakeDraggable(TaserButton)
+MakeDraggable(ArrestButton)
+MakeDraggable(BuffedTaserButton)
+
+-- Dash execution function
 local isDashing = false
 DashButton.MouseButton1Click:Connect(function()
     if isDashing or IsInVehicle() then return end
@@ -957,14 +1109,16 @@ DashButton.MouseButton1Click:Connect(function()
     
     isDashing = true
     local targetCFrame = rootPart.CFrame + (rootPart.CFrame.LookVector * DashDistance)
-    local tween = TweenService:Create(rootPart, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = targetCFrame})
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
+    
     tween:Play()
     tween.Completed:Connect(function()
         isDashing = false
     end)
 end)
 
--- Glitch execution function with smooth animation
+-- Glitch execution function
 local isGlitching = false
 GlitchButton.MouseButton1Click:Connect(function()
     if isGlitching or IsInVehicle() then return end
@@ -979,7 +1133,9 @@ GlitchButton.MouseButton1Click:Connect(function()
     isGlitching = true
     lastGlitchTime = currentTime
     local targetCFrame = rootPart.CFrame + Vector3.new(0, GlitchDistance, 0)
-    local tween = TweenService:Create(rootPart, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = targetCFrame})
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCFrame})
+    
     tween:Play()
     tween.Completed:Connect(function()
         isGlitching = false
@@ -990,7 +1146,9 @@ local function IsAlive(player)
     if not player.Character then return false end
     local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
     if not humanoid or humanoid.Health <= 0 then return false end
-    return player.Character:FindFirstChild("HumanoidRootPart") ~= nil
+    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return false end
+    return true
 end
 
 local function CanTargetByRankSimple(localPlayer, targetPlayer)
@@ -1049,18 +1207,21 @@ local function CanTargetByRankFull(localPlayer, targetPlayer)
 end
 
 local function GetNearestPlayerForMelee()
-    local nearestPlayer, shortestDistance = nil, 20
+    local nearestPlayer = nil
+    local shortestDistance = 20
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankSimple(LocalPlayer, player) then
-            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
-            if enemyRoot then
-                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
-                if dist < shortestDistance then
-                    shortestDistance = dist
-                    nearestPlayer = player
+        if player ~= LocalPlayer and IsAlive(player) then
+            if CanTargetByRankSimple(LocalPlayer, player) then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
                 end
             end
         end
@@ -1069,18 +1230,21 @@ local function GetNearestPlayerForMelee()
 end
 
 local function GetNearestPlayerForSimpleTaser()
-    local nearestPlayer, shortestDistance = nil, 45
+    local nearestPlayer = nil
+    local shortestDistance = 45
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankSimple(LocalPlayer, player) then
-            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
-            if enemyRoot then
-                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
-                if dist < shortestDistance then
-                    shortestDistance = dist
-                    nearestPlayer = player
+        if player ~= LocalPlayer and IsAlive(player) then
+            if CanTargetByRankSimple(LocalPlayer, player) then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
                 end
             end
         end
@@ -1089,18 +1253,21 @@ local function GetNearestPlayerForSimpleTaser()
 end
 
 local function GetNearestPlayerForArrest()
-    local nearestPlayer, shortestDistance = nil, 25
+    local nearestPlayer = nil
+    local shortestDistance = 25
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankSimple(LocalPlayer, player) then
-            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
-            if enemyRoot then
-                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
-                if dist < shortestDistance then
-                    shortestDistance = dist
-                    nearestPlayer = player
+        if player ~= LocalPlayer and IsAlive(player) then
+            if CanTargetByRankSimple(LocalPlayer, player) then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
                 end
             end
         end
@@ -1109,18 +1276,21 @@ local function GetNearestPlayerForArrest()
 end
 
 local function GetNearestPlayerForShoot()
-    local nearestPlayer, shortestDistance = nil, 45
+    local nearestPlayer = nil
+    local shortestDistance = 45
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and IsAlive(player) and CanTargetByRankFull(LocalPlayer, player) then
-            local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
-            if enemyRoot then
-                local dist = (localRoot.Position - enemyRoot.Position).Magnitude
-                if dist < shortestDistance then
-                    shortestDistance = dist
-                    nearestPlayer = player
+        if player ~= LocalPlayer and IsAlive(player) then
+            if CanTargetByRankFull(LocalPlayer, player) then
+                local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
+                if enemyRoot then
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        nearestPlayer = player
+                    end
                 end
             end
         end
@@ -1129,7 +1299,8 @@ local function GetNearestPlayerForShoot()
 end
 
 local function GetValidTargetForBuffedTaser()
-    local nearestPlayer, shortestDistance = nil, math.huge
+    local nearestPlayer = nil
+    local shortestDistance = math.huge
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
@@ -1139,9 +1310,9 @@ local function GetValidTargetForBuffedTaser()
             if teamName:find("criminal") then
                 local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if enemyRoot then
-                    local dist = (localRoot.Position - enemyRoot.Position).Magnitude
-                    if dist < shortestDistance then
-                        shortestDistance = dist
+                    local distance = (localRoot.Position - enemyRoot.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
                         nearestPlayer = player
                     end
                 end
@@ -1156,27 +1327,46 @@ local function SingleTaserShot()
     local targetPlayer = GetNearestPlayerForSimpleTaser()
     if not targetPlayer or not targetPlayer.Character then return end
     local targetHead = targetPlayer.Character:FindFirstChild("Head")
-    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not targetHead or not localRoot then return end
+    local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHead or not targetRoot then return end
     
     local char = LocalPlayer.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
-    local taserTool = char and (char:FindFirstChild("Taser") or (backpack and backpack:FindFirstChild("Taser")))
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not localRoot then return end
     
-    if taserTool and humanoid then
-        if char:FindFirstChildOfClass("Tool") ~= taserTool then
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then return end
+    
+    local currentTool = char:FindFirstChildOfClass("Tool")
+    local taserTool = char:FindFirstChild("Taser") or backpack:FindFirstChild("Taser")
+    
+    if taserTool then
+        if currentTool ~= taserTool then
             humanoid:EquipTool(taserTool)
             task.wait(0.05)
         end
         
-        pcall(function()
-            ReplicatedStorage.GunRemotes.ShootEvent:FireServer({{
-                vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-                vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-                targetHead
-            }})
-        end)
+        local shootArgs = {
+            {
+                {
+                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                    targetHead
+                }
+            }
+        }
+        
+        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+        if gunRemotes then
+            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+            if shootEvent then
+                pcall(function()
+                    shootEvent:FireServer(unpack(shootArgs))
+                end)
+            end
+        end
     end
 end
 
@@ -1198,12 +1388,25 @@ local function BuffedTaserAndArrestAction()
     end
 
     local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local char = LocalPlayer.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    local localRoot = char and char:FindFirstChild("HumanoidRootPart")
-    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not targetRoot then 
+        isBuffedTaserRunning = false
+        return 
+    end
     
-    if not targetRoot or not humanoid or not localRoot or not backpack then 
+    local char = LocalPlayer.Character
+    if not char then 
+        isBuffedTaserRunning = false
+        return 
+    end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not localRoot then 
+        isBuffedTaserRunning = false
+        return 
+    end
+    
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then 
         isBuffedTaserRunning = false
         return 
     end
@@ -1211,7 +1414,9 @@ local function BuffedTaserAndArrestAction()
     local oldCFrame = localRoot.CFrame
     humanoid.WalkSpeed = 24
 
-    local predictedPosition = targetRoot.Position + (targetRoot.Velocity * 0.25)
+    local targetVelocity = targetRoot.Velocity
+    local predictedPosition = targetRoot.Position + (targetVelocity * 0.25)
+
     localRoot.CFrame = CFrame.new(predictedPosition - (targetRoot.CFrame.LookVector * 4) + Vector3.new(0, 3, 0), predictedPosition)
     task.wait(0.15)
 
@@ -1220,9 +1425,12 @@ local function BuffedTaserAndArrestAction()
         if not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
             break
         end
+        
         local currentEnemyRoot = targetPlayer.Character.HumanoidRootPart
         humanoid:MoveTo(currentEnemyRoot.Position)
-        if (localRoot.Position - currentEnemyRoot.Position).Magnitude <= 5 then
+        
+        local dist = (localRoot.Position - currentEnemyRoot.Position).Magnitude
+        if dist <= 5 then
             break
         end
         task.wait(0.05)
@@ -1234,15 +1442,26 @@ local function BuffedTaserAndArrestAction()
     if handcuffsTool then
         humanoid:EquipTool(handcuffsTool)
         task.wait(0.05)
-        pcall(function()
-            ReplicatedStorage.Remotes.ArrestPlayer:InvokeServer(targetPlayer, 1)
-        end)
+        
+        local arrestArgs = {
+            targetPlayer,
+            1
+        }
+        
+        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        if arrestEvent then
+            pcall(function()
+                arrestEvent:InvokeServer(unpack(arrestArgs))
+            end)
+        end
     end
 
     task.wait(0.2)
+
     pcall(function()
         localRoot.CFrame = oldCFrame
     end)
+    
     humanoid.WalkSpeed = 16
     isBuffedTaserRunning = false
 end
@@ -1257,18 +1476,30 @@ local function SingleArrestAction()
     if not targetPlayer or not targetPlayer.Character then return end
     
     local char = LocalPlayer.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
     local backpack = LocalPlayer:FindFirstChild("Backpack")
-    local handcuffsTool = char and (char:FindFirstChild("Handcuffs") or backpack and backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack and backpack:FindFirstChild("Handcuff"))
+    if not humanoid or not backpack then return end
     
-    if handcuffsTool and humanoid then
-        if char:FindFirstChildOfClass("Tool") ~= handcuffsTool then
+    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+    if handcuffsTool then
+        local currentTool = char:FindFirstChildOfClass("Tool")
+        if currentTool ~= handcuffsTool then
             humanoid:EquipTool(handcuffsTool)
             task.wait(0.1)
         end
-        pcall(function()
-            ReplicatedStorage.Remotes.ArrestPlayer:InvokeServer(targetPlayer, 1)
-        end)
+        
+        local arrestArgs = {
+            targetPlayer,
+            1
+        }
+        
+        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        if arrestEvent then
+            pcall(function()
+                arrestEvent:InvokeServer(unpack(arrestArgs))
+            end)
+        end
     end
 end
 
@@ -1280,57 +1511,83 @@ local function ExecuteTaserAndSpamArrest(targetPlayer)
     if isTaserOrArresting or IsInVehicle() then return end
     if not targetPlayer or not targetPlayer.Character then return end
     local targetHead = targetPlayer.Character:FindFirstChild("Head")
-    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not targetHead or not localRoot then return end
+    local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHead or not targetRoot then return end
     
     local char = LocalPlayer.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not localRoot then return end
+    
     local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then return end
     
     isTaserOrArresting = true
-    local taserTool = char and (char:FindFirstChild("Taser") or backpack and backpack:FindFirstChild("Taser"))
     
-    if taserTool and humanoid then
-        if char:FindFirstChildOfClass("Tool") ~= taserTool then
+    local currentTool = char:FindFirstChildOfClass("Tool")
+    local taserTool = char:FindFirstChild("Taser") or backpack:FindFirstChild("Taser")
+    
+    if taserTool then
+        if currentTool ~= taserTool then
             humanoid:EquipTool(taserTool)
             task.wait(0.1)
         end
         
-        local shootArgs = {{{
-            vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-            vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-            targetHead
-        }}}
+        local shootArgs = {
+            {
+                {
+                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                    targetHead
+                }
+            }
+        }
         
-        pcall(function()
-            local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
-            if gunRemotes then
+        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+        if gunRemotes then
+            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+            if shootEvent then
                 for i = 1, 4 do
                     if IsInVehicle() then break end
-                    gunRemotes.ShootEvent:FireServer(unpack(shootArgs))
+                    pcall(function()
+                        shootEvent:FireServer(unpack(shootArgs))
+                    end)
                     task.wait(0.08)
                 end
-                if gunRemotes:FindFirstChild("FuncReload") then
-                    gunRemotes.FuncReload:InvokeServer()
-                end
             end
-        end)
+            
+            local funcReload = gunRemotes:FindFirstChild("FuncReload")
+            if funcReload then
+                pcall(function()
+                    funcReload:InvokeServer()
+                end)
+            end
+        end
     end
     
-    local handcuffsTool = char and (char:FindFirstChild("Handcuffs") or backpack and backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack and backpack:FindFirstChild("Handcuff"))
-    if handcuffsTool and humanoid and not IsInVehicle() then
+    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+    if handcuffsTool and not IsInVehicle() then
         humanoid:EquipTool(handcuffsTool)
         task.wait(0.1)
         
+        local arrestArgs = {
+            targetPlayer,
+            1
+        }
+        
         local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        
         if arrestEvent then
             for i = 1, 6 do
                 if IsInVehicle() or not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then break end
-                if (localRoot.Position - targetPlayer.Character.HumanoidRootPart.Position).Magnitude > 13 then
+                local currentDistance = (localRoot.Position - targetPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if currentDistance > 13 then
                     break
                 end
+                
                 pcall(function()
-                    arrestEvent:InvokeServer(targetPlayer, 1)
+                    arrestEvent:InvokeServer(unpack(arrestArgs))
                 end)
                 task.wait(0.1)
             end
@@ -1344,7 +1601,7 @@ task.spawn(function()
     while true do
         task.wait(0.1)
         if speedEnabled then
-            local vehiclePart = GetCurrentVehiclePart()
+            local vehiclePart = GetCurrentVehiclePartGlobal()
             if vehiclePart then
                 local vehicle = vehiclePart.Parent
                 local primaryPart = vehicle.PrimaryPart or vehiclePart
@@ -1368,7 +1625,9 @@ task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
             local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
-            if not currentTeam:find("criminal") then
+            local isCriminal = currentTeam:find("criminal") ~= nil
+            
+            if not isCriminal then
                 local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
                 local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
                 
@@ -1377,20 +1636,50 @@ task.spawn(function()
                     local rootPart = char and char:FindFirstChild("HumanoidRootPart")
                     
                     if rootPart then
+                        local buttonsFolder = Workspace:FindFirstChild("Prison_ITEMS") and Workspace.Prison_ITEMS:FindFirstChild("buttons")
+                        local nearestSpawner = nil
+                        local shortestDist = math.huge
+                        
+                        if buttonsFolder then
+                            for _, item in ipairs(buttonsFolder:GetChildren()) do
+                                local spawnerPart = item:FindFirstChild("Car Spawner") or item:FindFirstChildWhichIsA("BasePart")
+                                if spawnerPart then
+                                    local partPos = spawnerPart:IsA("BasePart") and spawnerPart.Position or spawnerPart:GetPivot().Position
+                                    local dist = (rootPart.Position - partPos).Magnitude
+                                    if dist < shortestDist then
+                                        shortestDist = dist
+                                        nearestSpawner = spawnerPart
+                                    end
+                                end
+                            end
+                        end
+                        
                         local oldCFrame = rootPart.CFrame
-                        rootPart.CFrame = CFrame.new(817, 98, 2222)
+                        if nearestSpawner then
+                            local spawnerPos = nearestSpawner:IsA("BasePart") and nearestSpawner.Position or nearestSpawner:GetPivot().Position
+                            rootPart.CFrame = CFrame.new(spawnerPos)
+                        else
+                            rootPart.CFrame = CFrame.new(817, 98, 2222)
+                        end
+                        
                         task.wait(0.4)
                         
                         if not hasMP5 then
                             pcall(function()
-                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)"))
+                                local mp5Args = {
+                                    Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("MP5"):WaitForChild("Meshes/MP5 (2)")
+                                }
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(mp5Args))
                             end)
                             task.wait(0.3)
                         end
                         
                         if not hasRemington then
                             pcall(function()
-                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2"))
+                                local r870Args = {
+                                    Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Remington 870"):WaitForChild("Meshes/r870_2")
+                                }
+                                ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(r870Args))
                             end)
                             task.wait(0.3)
                         end
@@ -1407,9 +1696,16 @@ end)
 RunService.RenderStepped:Connect(function()
     local mousePos = UserInputService:GetMouseLocation()
     fovCircle.Position = mousePos
+
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-    if IsInVehicle() then return end
+    if LightningPinnedToMenu then
+        ToggleButton.Position = MainFrame.Position + UDim2.new(0, -55, 0, 0)
+    end
+
+    if IsInVehicle() then
+        return
+    end
 
     if AutoMeleeEnabled then
         local currentTime = tick()
@@ -1418,7 +1714,12 @@ RunService.RenderStepped:Connect(function()
             local nearestTarget = GetNearestPlayerForMelee()
             if nearestTarget then
                 pcall(function()
-                    ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(nearestTarget, 1, 1)
+                    local meleeArgs = {
+                        nearestTarget,
+                        1,
+                        1
+                    }
+                    ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(unpack(meleeArgs))
                 end)
             end
         end
@@ -1512,16 +1813,23 @@ RunService.RenderStepped:Connect(function()
             if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
                 if CanTargetByRankFull(LocalPlayer, player) then
                     local head = player.Character.Head
+                    
                     if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
                         local targetRootPart = player.Character.HumanoidRootPart
-                        if (localRoot.Position - targetRootPart.Position).Magnitude <= MaxAimlockDistance then
+                        local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
+                        if distanceInStuds <= MaxAimlockDistance then
                             local origin = Camera.CFrame.Position
                             local direction = (head.Position - origin)
                             local raycastParams = RaycastParams.new()
                             raycastParams.FilterType = Enum.RaycastFilterType.Exclude
                             raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
                             local result = Workspace:Raycast(origin, direction, raycastParams)
-                            local isVisible = not result or result.Instance:IsDescendantOf(head.Parent)
+                            local isVisible = false
+                            if result and result.Instance:IsDescendantOf(head.Parent) then
+                                isVisible = true
+                            elseif not result then
+                                isVisible = true
+                            end
 
                             if isVisible then
                                 local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
