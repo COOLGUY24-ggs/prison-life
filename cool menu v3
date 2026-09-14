@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Name: Luaroblox_helper
--- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.3 - 5s Reload & Target Death Fix)
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.4 - Permanent ESP Fix)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -88,7 +88,7 @@ TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
 TitleLabel.TextSize = 15
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Text = "⚡ Luaroblox | Prison Life v11.3"
+TitleLabel.Text = "⚡ Luaroblox | Prison Life v11.4"
 TitleLabel.Parent = TopBar
 
 -- Search Bar in TopBar
@@ -1370,6 +1370,25 @@ local function CanTargetByRankFull(localPlayer, targetPlayer)
     return true
 end
 
+-- Wall Check Utility Helper Function
+local function IsVisible(targetPart)
+    local origin = Camera.CFrame.Position
+    local direction = (targetPart.Position - origin)
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    local result = Workspace:Raycast(origin, direction, raycastParams)
+    
+    if result then
+        if result.Instance:IsDescendantOf(targetPart.Parent) then
+            return true
+        else
+            return false
+        end
+    end
+    return true
+end
+
 local function GetNearestPlayerForMelee()
     local nearestPlayer = nil
     local shortestDistance = 20
@@ -1495,6 +1514,9 @@ local function SingleTaserShot()
     local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not targetHead or not targetRoot then return end
     
+    -- Wall check applied here
+    if not IsVisible(targetHead) then return end
+    
     local char = LocalPlayer.Character
     if not char then return end
     local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -1539,13 +1561,16 @@ TaserButton.MouseButton1Click:Connect(function()
     task.spawn(SingleTaserShot)
 end)
 
--- Shoot Nearest Person Action (Equips MP5 and Shoots)
+-- Shoot Nearest Person Action (Equips MP5 and Shoots with Wallcheck)
 local function ShootNearestPersonAction()
     if IsInVehicle() then return end
     local targetPlayer = GetNearestCriminalWithin200()
     if not targetPlayer or not targetPlayer.Character then return end
     local targetHead = targetPlayer.Character:FindFirstChild("Head")
     if not targetHead then return end
+
+    -- Wall check applied here
+    if not IsVisible(targetHead) then return end
 
     local char = LocalPlayer.Character
     if not char then return end
@@ -1816,73 +1841,164 @@ RunService.RenderStepped:Connect(function()
 
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-    if IsInVehicle() then
-        currentTargetPlayer = nil
-        return
-    end
-
-    if AutoMeleeEnabled then
-        local currentTime = tick()
-        if currentTime - lastMeleeTime >= 0.2 then
-            lastMeleeTime = currentTime
-            local nearestTarget = GetNearestPlayerForMelee()
-            if nearestTarget then
-                pcall(function()
-                    local meleeArgs = {
-                        nearestTarget,
-                        1,
-                        1
-                    }
-                    ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(unpack(meleeArgs))
-                end)
+    if not IsInVehicle() then
+        if AutoMeleeEnabled then
+            local currentTime = tick()
+            if currentTime - lastMeleeTime >= 0.2 then
+                lastMeleeTime = currentTime
+                local nearestTarget = GetNearestPlayerForMelee()
+                if nearestTarget then
+                    pcall(function()
+                        local meleeArgs = {
+                            nearestTarget,
+                            1,
+                            1
+                        }
+                        ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(unpack(meleeArgs))
+                    end)
+                end
             end
         end
-    end
 
-    if AutoShootCriminalsEnabled then
-        local currentTime = tick()
-        if currentTime - lastAutoShootCriminalsTime >= 0.15 then
-            lastAutoShootCriminalsTime = currentTime
-            local targetPlayer = GetNearestCriminalWithin200()
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-                local targetHead = targetPlayer.Character.Head
-                local char = LocalPlayer.Character
-                if char and localRoot then
-                    local humanoid = char:FindFirstChildOfClass("Humanoid")
-                    local backpack = LocalPlayer:FindFirstChild("Backpack")
-                    local mp5Tool = char:FindFirstChild("MP5") or (backpack and backpack:FindFirstChild("MP5"))
+        if AutoShootCriminalsEnabled then
+            local currentTime = tick()
+            if currentTime - lastAutoShootCriminalsTime >= 0.15 then
+                lastAutoShootCriminalsTime = currentTime
+                local targetPlayer = GetNearestCriminalWithin200()
+                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+                    local targetHead = targetPlayer.Character.Head
                     
-                    if mp5Tool and humanoid then
-                        local currentTool = char:FindFirstChildOfClass("Tool")
-                        if currentTool ~= mp5Tool then
-                            humanoid:EquipTool(mp5Tool)
-                        end
-                        
-                        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
-                        if gunRemotes then
-                            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
-                            if shootEvent then
-                                local shootArgs = {
-                                    {
-                                        {
-                                            vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-                                            vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-                                            targetHead
+                    -- Constant wall check validation loop before firing remote
+                    if IsVisible(targetHead) then
+                        local char = LocalPlayer.Character
+                        if char and localRoot then
+                            local humanoid = char:FindFirstChildOfClass("Humanoid")
+                            local backpack = LocalPlayer:FindFirstChild("Backpack")
+                            local mp5Tool = char:FindFirstChild("MP5") or (backpack and backpack:FindFirstChild("MP5"))
+                            
+                            if mp5Tool and humanoid then
+                                local currentTool = char:FindFirstChildOfClass("Tool")
+                                if currentTool ~= mp5Tool then
+                                    humanoid:EquipTool(mp5Tool)
+                                end
+                                
+                                local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+                                if gunRemotes then
+                                    local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+                                    if shootEvent then
+                                        local shootArgs = {
+                                            {
+                                                {
+                                                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                                                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                                                    targetHead
+                                                }
+                                            }
                                         }
-                                    }
-                                }
-                                pcall(function()
-                                    shootEvent:FireServer(unpack(shootArgs))
-                                end)
+                                        pcall(function()
+                                            shootEvent:FireServer(unpack(shootArgs))
+                                        end)
+                                    end
+                                end
                             end
                         end
                     end
                 end
             end
         end
+
+        if AimlockEnabled then
+            local closestPlayer = nil
+            local shortestDistance = FOVRadius
+
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
+                    if CanTargetByRankFull(LocalPlayer, player) then
+                        local head = player.Character.Head
+                        
+                        if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local targetRootPart = player.Character.HumanoidRootPart
+                            local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
+                            if distanceInStuds <= MaxAimlockDistance then
+                                -- Uses constant IsVisible check
+                                if IsVisible(head) then
+                                    local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
+                                    if onScreen then
+                                        local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
+                                        if distance < shortestDistance then
+                                            shortestDistance = distance
+                                            closestPlayer = player
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- Target Death & Reload Trigger Handler
+            if closestPlayer ~= currentTargetPlayer then
+                if currentTargetPlayer ~= nil and not IsAlive(currentTargetPlayer) then
+                    pcall(function()
+                        game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+                    end)
+                end
+                currentTargetPlayer = closestPlayer
+            end
+
+            if currentTargetPlayer and not IsAlive(currentTargetPlayer) then
+                pcall(function()
+                    game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+                end)
+                currentTargetPlayer = nil
+            end
+
+            if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Head") then
+                local targetHead = currentTargetPlayer.Character.Head
+                
+                -- Extra constant validation check before firing aimlock auto-shoot remote
+                if IsVisible(targetHead) then
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+
+                    local currentTime = tick()
+                    if currentTime - lastAutoShootTime >= 0.15 then
+                        lastAutoShootTime = currentTime
+
+                        local char = LocalPlayer.Character
+                        if char then
+                            local currentTool = char:FindFirstChildOfClass("Tool")
+                            local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+                            
+                            if currentTool and gunRemotes then
+                                local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+                                if shootEvent then
+                                    local shootArgs = {
+                                        {
+                                            {
+                                                vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                                                vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                                                targetHead
+                                            }
+                                        }
+                                    }
+                                    pcall(function()
+                                        shootEvent:FireServer(unpack(shootArgs))
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            currentTargetPlayer = nil
+        end
+    else
+        currentTargetPlayer = nil
     end
 
-    -- Fixed ESP Loop
+    -- Permanent ESP Loop (Runs independently every frame regardless of vehicle state or other toggles)
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             local char = player.Character
@@ -1952,101 +2068,5 @@ RunService.RenderStepped:Connect(function()
                 end
             end
         end
-    end
-
-    if AimlockEnabled then
-        local closestPlayer = nil
-        local shortestDistance = FOVRadius
-
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
-                if CanTargetByRankFull(LocalPlayer, player) then
-                    local head = player.Character.Head
-                    
-                    if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
-                        local targetRootPart = player.Character.HumanoidRootPart
-                        local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
-                        if distanceInStuds <= MaxAimlockDistance then
-                            local origin = Camera.CFrame.Position
-                            local direction = (head.Position - origin)
-                            local raycastParams = RaycastParams.new()
-                            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-                            local result = Workspace:Raycast(origin, direction, raycastParams)
-                            local isVisible = false
-                            if result and result.Instance:IsDescendantOf(head.Parent) then
-                                isVisible = true
-                            elseif not result then
-                                isVisible = true
-                            end
-
-                            if isVisible then
-                                local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
-                                if onScreen then
-                                    local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
-                                    if distance < shortestDistance then
-                                        shortestDistance = distance
-                                        closestPlayer = player
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        -- Target Death & Reload Trigger Handler
-        if closestPlayer ~= currentTargetPlayer then
-            if currentTargetPlayer ~= nil and not IsAlive(currentTargetPlayer) then
-                pcall(function()
-                    game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
-                end)
-            end
-            currentTargetPlayer = closestPlayer
-        end
-
-        if currentTargetPlayer and not IsAlive(currentTargetPlayer) then
-            pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
-            end)
-            currentTargetPlayer = nil
-        end
-
-        if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Head") then
-            local targetHead = currentTargetPlayer.Character.Head
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-
-            local currentTime = tick()
-            if currentTime - lastAutoShootTime >= 0.15 then
-                lastAutoShootTime = currentTime
-
-                local char = LocalPlayer.Character
-                if char then
-                    local currentTool = char:FindFirstChildOfClass("Tool")
-                    local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
-                    
-                    if currentTool and gunRemotes then
-                        local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
-                        if shootEvent then
-                            local shootArgs = {
-                                {
-                                    {
-                                        vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-                                        vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-                                        targetHead
-                                    }
-                                }
-                            }
-                            pcall(function()
-                                shootEvent:FireServer(unpack(shootArgs))
-                            end)
-                        end
-                    end
-                end
-            end
-        end
-    else
-        currentTargetPlayer = nil
     end
 end)
