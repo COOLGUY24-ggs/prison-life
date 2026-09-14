@@ -592,7 +592,7 @@ local FlySpeed = 50
 local FOVRadius = 500
 local DashDistance = 10
 local GlitchDistance = 10
-local MaxAimlockDistance = 300
+local MaxAimlockDistance = 350
 
 -- Variables for Vehicle Speed
 local speedEnabled = false
@@ -675,7 +675,7 @@ AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, functio
     PlayNotificationSound()
 end)
 
-AddToggle(CombatTab, "Auto Shoot Criminals (MP5 - 200 Studs)", false, function(Value)
+AddToggle(CombatTab, "Auto Shoot Criminals (MP5 - 350 Studs)", false, function(Value)
     AutoShootCriminalsEnabled = Value
     PlayNotificationSound()
 end)
@@ -1458,9 +1458,9 @@ local function GetNearestPlayerForArrest()
     return nearestPlayer
 end
 
-local function GetNearestCriminalWithin200()
+local function GetNearestCriminalWithin350()
     local nearestPlayer = nil
-    local shortestDistance = 200
+    local shortestDistance = 350
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
@@ -1564,7 +1564,7 @@ end)
 -- Shoot Nearest Person Action (Equips MP5 and Shoots with Wallcheck)
 local function ShootNearestPersonAction()
     if IsInVehicle() then return end
-    local targetPlayer = GetNearestCriminalWithin200()
+    local targetPlayer = GetNearestCriminalWithin350()
     if not targetPlayer or not targetPlayer.Character then return end
     local targetHead = targetPlayer.Character:FindFirstChild("Head")
     if not targetHead then return end
@@ -1864,7 +1864,7 @@ RunService.RenderStepped:Connect(function()
             local currentTime = tick()
             if currentTime - lastAutoShootCriminalsTime >= 0.15 then
                 lastAutoShootCriminalsTime = currentTime
-                local targetPlayer = GetNearestCriminalWithin200()
+                local targetPlayer = GetNearestCriminalWithin350()
                 if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
                     local targetHead = targetPlayer.Character.Head
                     
