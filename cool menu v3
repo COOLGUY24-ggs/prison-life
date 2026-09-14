@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Name: Luaroblox_helper
--- Project: Prison Script Update (Cyberpunk Ultimate Hub v10.8 - Enhanced UI & Search)
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.3 - 5s Reload & Target Death Fix)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -36,6 +36,10 @@ end
 
 if CoreGui:FindFirstChild("PrisonHubBuffedTaserGui") then
     CoreGui.PrisonHubBuffedTaserGui:Destroy()
+end
+
+if CoreGui:FindFirstChild("PrisonHubShootGui") then
+    CoreGui.PrisonHubShootGui:Destroy()
 end
 
 -- Custom UI Setup with Neon/Cyberpunk Style
@@ -84,7 +88,7 @@ TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
 TitleLabel.TextSize = 15
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Text = "⚡ Luaroblox | Prison Life v10.8"
+TitleLabel.Text = "⚡ Luaroblox | Prison Life v11.3"
 TitleLabel.Parent = TopBar
 
 -- Search Bar in TopBar
@@ -581,6 +585,7 @@ local TeamCheckEnabled = true
 local ESPEnabled = false
 local AutoMeleeEnabled = false
 local AutoShootEnabled = false
+local AutoShootCriminalsEnabled = false
 local AutoWeaponsEnabled = false
 local JoystickFlyEnabled = false
 local FlySpeed = 50
@@ -599,6 +604,8 @@ local lastCarClickTime = 0
 local CooldownTime = 2.0
 local isTaserOrArresting = false
 local lastMeleeTime = 0
+local lastAutoShootTime = 0
+local lastAutoShootCriminalsTime = 0
 
 -- Cooldown variables for the Buffed Taser & Arrest button
 local isBuffedTaserRunning = false
@@ -665,6 +672,11 @@ end)
 
 AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, function(Value)
     AutoShootEnabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(CombatTab, "Auto Shoot Criminals (MP5 - 200 Studs)", false, function(Value)
+    AutoShootCriminalsEnabled = Value
     PlayNotificationSound()
 end)
 
@@ -912,7 +924,7 @@ AddToggle(VehicleTab, "Vehicle Fly (Look to Fly Up/Down)", false, function(Value
     end
 end)
 
-AddSlider(VehicleTab, "Fly Speed", 16, 150, 50, " studs/s", function(Value)
+AddSlider(VehicleTab, "Fly Speed", 16, 500, 50, " studs/s", function(Value)
     FlySpeed = Value
 end)
 
@@ -947,6 +959,11 @@ end)
 
 AddToggle(GuiTab, "Mobile/Movable Buffed Taser & Arrest Button", false, function(Value)
     BuffedTaserGui.Enabled = Value
+    PlayNotificationSound()
+end)
+
+AddToggle(GuiTab, "Mobile/Movable Shoot Nearest Button", false, function(Value)
+    ShootGui.Enabled = Value
     PlayNotificationSound()
 end)
 
@@ -1211,12 +1228,39 @@ UIStrokeBuffedTaser.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeBuffedTaser.Thickness = 3
 UIStrokeBuffedTaser.Parent = BuffedTaserButton
 
+-- Shoot Nearest GUI Setup (SHOOT - Equips MP5)
+ShootGui = Instance.new("ScreenGui")
+ShootGui.Name = "PrisonHubShootGui"
+ShootGui.Parent = CoreGui
+ShootGui.Enabled = false
+
+local ShootButton = Instance.new("TextButton")
+ShootButton.Name = "ShootButton"
+ShootButton.Size = UDim2.new(0, 90, 0, 90)
+ShootButton.Position = UDim2.new(0.05, 0, 0.6, 0)
+ShootButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+ShootButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+ShootButton.TextSize = 20
+ShootButton.Font = Enum.Font.SourceSansBold
+ShootButton.Text = "SHOOT"
+ShootButton.Parent = ShootGui
+
+local UICornerShoot = Instance.new("UICorner")
+UICornerShoot.CornerRadius = UDim.new(1, 0)
+UICornerShoot.Parent = ShootButton
+
+local UIStrokeShoot = Instance.new("UIStroke")
+UIStrokeShoot.Color = Color3.fromRGB(255, 255, 255)
+UIStrokeShoot.Thickness = 3
+UIStrokeShoot.Parent = ShootButton
+
 -- Dragging logic for mobile buttons
 MakeDraggable(DashButton)
 MakeDraggable(GlitchButton)
 MakeDraggable(TaserButton)
 MakeDraggable(ArrestButton)
 MakeDraggable(BuffedTaserButton)
+MakeDraggable(ShootButton)
 
 -- Dash execution function
 local isDashing = false
@@ -1395,19 +1439,20 @@ local function GetNearestPlayerForArrest()
     return nearestPlayer
 end
 
-local function GetNearestPlayerForShoot()
+local function GetNearestCriminalWithin200()
     local nearestPlayer = nil
-    local shortestDistance = 45
+    local shortestDistance = 200
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and IsAlive(player) then
-            if CanTargetByRankFull(LocalPlayer, player) then
+            local teamName = player.Team and player.Team.Name:lower() or ""
+            if teamName:find("criminal") then
                 local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if enemyRoot then
                     local distance = (localRoot.Position - enemyRoot.Position).Magnitude
-                    if distance < shortestDistance then
+                    if distance <= shortestDistance then
                         shortestDistance = distance
                         nearestPlayer = player
                     end
@@ -1492,6 +1537,57 @@ end
 
 TaserButton.MouseButton1Click:Connect(function()
     task.spawn(SingleTaserShot)
+end)
+
+-- Shoot Nearest Person Action (Equips MP5 and Shoots)
+local function ShootNearestPersonAction()
+    if IsInVehicle() then return end
+    local targetPlayer = GetNearestCriminalWithin200()
+    if not targetPlayer or not targetPlayer.Character then return end
+    local targetHead = targetPlayer.Character:FindFirstChild("Head")
+    if not targetHead then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not localRoot then return end
+
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not backpack then return end
+
+    local mp5Tool = char:FindFirstChild("MP5") or backpack:FindFirstChild("MP5")
+
+    if mp5Tool then
+        local currentTool = char:FindFirstChildOfClass("Tool")
+        if currentTool ~= mp5Tool then
+            humanoid:EquipTool(mp5Tool)
+            task.wait(0.05)
+        end
+    end
+
+    local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+    if gunRemotes then
+        local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+        if shootEvent then
+            local shootArgs = {
+                {
+                    {
+                        vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                        vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                        targetHead
+                    }
+                }
+            }
+            pcall(function()
+                shootEvent:FireServer(unpack(shootArgs))
+            end)
+        end
+    end
+end
+
+ShootButton.MouseButton1Click:Connect(function()
+    task.spawn(ShootNearestPersonAction)
 end)
 
 local function BuffedTaserAndArrestAction()
@@ -1582,7 +1678,6 @@ local function BuffedTaserAndArrestAction()
         localRoot.CFrame = oldCFrame
     end)
     
-    -- Snelheid na de actie ingesteld op 22 in plaats van 16
     humanoid.WalkSpeed = 22
     isBuffedTaserRunning = false
 end
@@ -1700,6 +1795,21 @@ task.spawn(function()
     end
 end)
 
+-- Dedicated Aimlock Tracking / Target Death Detector Variables
+local currentTargetPlayer = nil
+
+-- Separate background loop that fires FuncReload exactly every 5 seconds when Aimlock or Auto Shoot is active
+task.spawn(function()
+    while true do
+        task.wait(5)
+        if AimlockEnabled or AutoShootCriminalsEnabled or AutoShootEnabled then
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+            end)
+        end
+    end
+end)
+
 RunService.RenderStepped:Connect(function()
     local mousePos = UserInputService:GetMouseLocation()
     fovCircle.Position = mousePos
@@ -1707,6 +1817,7 @@ RunService.RenderStepped:Connect(function()
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
     if IsInVehicle() then
+        currentTargetPlayer = nil
         return
     end
 
@@ -1728,6 +1839,50 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
+    if AutoShootCriminalsEnabled then
+        local currentTime = tick()
+        if currentTime - lastAutoShootCriminalsTime >= 0.15 then
+            lastAutoShootCriminalsTime = currentTime
+            local targetPlayer = GetNearestCriminalWithin200()
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
+                local targetHead = targetPlayer.Character.Head
+                local char = LocalPlayer.Character
+                if char and localRoot then
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    local backpack = LocalPlayer:FindFirstChild("Backpack")
+                    local mp5Tool = char:FindFirstChild("MP5") or (backpack and backpack:FindFirstChild("MP5"))
+                    
+                    if mp5Tool and humanoid then
+                        local currentTool = char:FindFirstChildOfClass("Tool")
+                        if currentTool ~= mp5Tool then
+                            humanoid:EquipTool(mp5Tool)
+                        end
+                        
+                        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+                        if gunRemotes then
+                            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+                            if shootEvent then
+                                local shootArgs = {
+                                    {
+                                        {
+                                            vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                                            vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                                            targetHead
+                                        }
+                                    }
+                                }
+                                pcall(function()
+                                    shootEvent:FireServer(unpack(shootArgs))
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- Fixed ESP Loop
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             local char = player.Character
@@ -1841,8 +1996,57 @@ RunService.RenderStepped:Connect(function()
             end
         end
 
-        if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character.Head.Position)
+        -- Target Death & Reload Trigger Handler
+        if closestPlayer ~= currentTargetPlayer then
+            if currentTargetPlayer ~= nil and not IsAlive(currentTargetPlayer) then
+                pcall(function()
+                    game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+                end)
+            end
+            currentTargetPlayer = closestPlayer
         end
+
+        if currentTargetPlayer and not IsAlive(currentTargetPlayer) then
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+            end)
+            currentTargetPlayer = nil
+        end
+
+        if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Head") then
+            local targetHead = currentTargetPlayer.Character.Head
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
+
+            local currentTime = tick()
+            if currentTime - lastAutoShootTime >= 0.15 then
+                lastAutoShootTime = currentTime
+
+                local char = LocalPlayer.Character
+                if char then
+                    local currentTool = char:FindFirstChildOfClass("Tool")
+                    local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+                    
+                    if currentTool and gunRemotes then
+                        local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+                        if shootEvent then
+                            local shootArgs = {
+                                {
+                                    {
+                                        vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                                        vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                                        targetHead
+                                    }
+                                }
+                            }
+                            pcall(function()
+                                shootEvent:FireServer(unpack(shootArgs))
+                            end)
+                        end
+                    end
+                end
+            end
+        end
+    else
+        currentTargetPlayer = nil
     end
 end)
