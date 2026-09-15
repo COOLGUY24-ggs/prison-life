@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Name: Luaroblox_helper
--- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.4 - Permanent ESP Fix)
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.5 - Cool Notification Fix)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -42,11 +42,81 @@ if CoreGui:FindFirstChild("PrisonHubShootGui") then
     CoreGui.PrisonHubShootGui:Destroy()
 end
 
+if CoreGui:FindFirstChild("PrisonHubNotificationGui") then
+    CoreGui.PrisonHubNotificationGui:Destroy()
+end
+
 -- Custom UI Setup with Neon/Cyberpunk Style
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LuarobloxCustomHub"
 ScreenGui.Parent = CoreGui
 ScreenGui.Enabled = true
+
+-- Notification GUI Setup for Cool Animation (Starts completely hidden above the screen)
+local NotificationGui = Instance.new("ScreenGui")
+NotificationGui.Name = "PrisonHubNotificationGui"
+NotificationGui.Parent = CoreGui
+NotificationGui.Enabled = true
+
+local NotifFrame = Instance.new("Frame")
+NotifFrame.Name = "NotifFrame"
+NotifFrame.Size = UDim2.new(0, 320, 0, 50)
+NotifFrame.Position = UDim2.new(0.5, -160, 0, -80) -- Standaard ruim boven het scherm verborgen
+NotifFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+NotifFrame.BorderSizePixel = 0
+NotifFrame.Visible = false -- Volledig uitgeschakeld tot activatie
+NotifFrame.Parent = NotificationGui
+
+local NotifCorner = Instance.new("UICorner")
+NotifCorner.CornerRadius = UDim.new(0, 12)
+NotifCorner.Parent = NotifFrame
+
+local NotifStroke = Instance.new("UIStroke")
+NotifStroke.Color = Color3.fromRGB(255, 50, 80)
+NotifStroke.Thickness = 2
+NotifStroke.Parent = NotifFrame
+
+local NotifText = Instance.new("TextLabel")
+NotifText.Size = UDim2.new(1, 0, 1, 0)
+NotifText.BackgroundTransparency = 1
+NotifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+NotifText.TextSize = 15
+NotifText.Font = Enum.Font.GothamBold
+NotifText.Text = "⚠️ Get in a car!"
+NotifText.Parent = NotifFrame
+
+-- Vaste coroutine / animatie controle om glitches te voorkomen
+local isNotifAnimating = false
+
+local function ShowCoolNotification(message)
+    if isNotifAnimating then return end
+    isNotifAnimating = true
+    
+    NotifText.Text = "⚠️ " .. message
+    NotifFrame.Position = UDim2.new(0.5, -160, 0, -80)
+    NotifFrame.Visible = true
+    
+    -- Cooler slide down animation with Back easing style
+    local slideDown = TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -160, 0, 35)
+    })
+    slideDown:Play()
+    
+    slideDown.Completed:Connect(function()
+        task.delay(2.2, function()
+            -- Slide up and hide completely off screen
+            local slideUp = TweenService:Create(NotifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {
+                Position = UDim2.new(0.5, -160, 0, -80)
+            })
+            slideUp:Play()
+            
+            slideUp.Completed:Connect(function()
+                NotifFrame.Visible = false
+                isNotifAnimating = false
+            end)
+        end)
+    end)
+end
 
 -- Main Frame (Menu)
 local MainFrame = Instance.new("Frame")
@@ -88,7 +158,7 @@ TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 204)
 TitleLabel.TextSize = 15
 TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Text = "⚡ Luaroblox | Prison Life v11.4"
+TitleLabel.Text = "⚡ Luaroblox | Prison Life v11.5"
 TitleLabel.Parent = TopBar
 
 -- Search Bar in TopBar
@@ -137,7 +207,7 @@ local function MakeDraggable(btn)
     end)
 end
 
--- Minimize/Toggle UI Button (Lightning Emoji) - Hidden by default until X is clicked
+-- Minimize/Toggle UI Button (Lightning Emoji)
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0, 45, 0, 45)
@@ -161,7 +231,7 @@ ToggleStroke.Parent = ToggleButton
 
 MakeDraggable(ToggleButton)
 
--- Topbar Action Buttons (Right side: Fullscreen & Close/X)
+-- Topbar Action Buttons
 local FullscreenButton = Instance.new("TextButton")
 FullscreenButton.Name = "FullscreenButton"
 FullscreenButton.Size = UDim2.new(0, 32, 0, 32)
@@ -218,13 +288,11 @@ FullscreenButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Close Button Logic (Hides Menu & Shows Floating Lightning Button)
 CloseButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     ToggleButton.Visible = true
 end)
 
--- Lightning Button Click (Opens Menu & Hides Lightning Button)
 ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = true
     ToggleButton.Visible = false
@@ -249,7 +317,7 @@ UIListLayoutSidebar.Parent = Sidebar
 local activeTab = nil
 local tabFrames = {}
 local tabButtonsList = {}
-local registeredElements = {} -- For search feature
+local registeredElements = {}
 
 local function CreateCustomTab(name, iconText)
     local tabBtn = Instance.new("TextButton")
@@ -336,7 +404,6 @@ local GuiTab = CreateCustomTab("Mobile / GUI", "📱")
 local VisualsTab = CreateCustomTab("Visuals", "👁️")
 local SettingsTab = CreateCustomTab("Settings", "⚙️")
 
--- Search Functionality Logic
 SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     local query = SearchBox.Text:lower()
     if query == "" then
@@ -355,7 +422,6 @@ SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
--- Special HUB Dashboard Banner
 local function AddDashboardBanner(parent)
     local banner = Instance.new("Frame")
     banner.Size = UDim2.new(1, -12, 0, 85)
@@ -420,7 +486,6 @@ end
 
 AddDashboardBanner(MainTab)
 
--- Element Creators with Search Integration
 local function AddToggle(parent, text, default, callback)
     local toggleBtn = Instance.new("TextButton")
     toggleBtn.Size = UDim2.new(1, -12, 0, 42)
@@ -585,7 +650,7 @@ local TeamCheckEnabled = true
 local ESPEnabled = false
 local AutoMeleeEnabled = false
 local AutoShootEnabled = false
-local AutoShootCriminalsEnabled = false
+local AutoShootTargetsEnabled = false
 local AutoWeaponsEnabled = false
 local JoystickFlyEnabled = false
 local FlySpeed = 50
@@ -594,7 +659,6 @@ local DashDistance = 10
 local GlitchDistance = 10
 local MaxAimlockDistance = 350
 
--- Variables for Vehicle Speed
 local speedEnabled = false
 local speedMultiplier = 50
 
@@ -605,14 +669,12 @@ local CooldownTime = 2.0
 local isTaserOrArresting = false
 local lastMeleeTime = 0
 local lastAutoShootTime = 0
-local lastAutoShootCriminalsTime = 0
+local lastAutoShootTargetsTime = 0
 
--- Cooldown variables for the Buffed Taser & Arrest button
 local isBuffedTaserRunning = false
 local lastBuffedTaserTime = 0
 local BuffedTaserCooldown = 25.0
 
--- Settings Variables
 local RainbowEnabled = false
 local RainbowSpeed = 2
 local SoundEnabled = true
@@ -642,7 +704,6 @@ local function PlayNotificationSound()
     end)
 end
 
--- ==================== MAIN TAB ====================
 AddToggle(MainTab, "Auto Get Weapons", false, function(Value)
     AutoWeaponsEnabled = Value
     PlayNotificationSound()
@@ -653,7 +714,6 @@ AddToggle(MainTab, "Team Check (Smart Rank Filter)", true, function(Value)
     PlayNotificationSound()
 end)
 
--- ==================== COMBAT TAB ====================
 AddToggle(CombatTab, "Aimlock Mouse Circle (FOV)", false, function(Value)
     AimlockEnabled = Value
     fovCircle.Visible = Value
@@ -675,12 +735,72 @@ AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, functio
     PlayNotificationSound()
 end)
 
-AddToggle(CombatTab, "Auto Shoot Criminals (MP5 - 350 Studs)", false, function(Value)
-    AutoShootCriminalsEnabled = Value
+AddToggle(CombatTab, "Auto Shoot (MP5 - 350 Studs)", false, function(Value)
+    AutoShootTargetsEnabled = Value
     PlayNotificationSound()
 end)
 
--- ==================== VEHICLE TAB ====================
+local function GetCurrentVehiclePartGlobal()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid and humanoid.SeatPart then
+        return humanoid.SeatPart
+    end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if rootPart then
+        for _, child in ipairs(rootPart:GetChildren()) do
+            if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
+                local part0 = child.Part0
+                local part1 = child.Part1
+                local otherPart = (part0 == rootPart) and part1 or part0
+                if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
+                    return otherPart
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function IsInVehicle()
+    return GetCurrentVehiclePartGlobal() ~= nil
+end
+
+AddButton(VehicleTab, "Go To Criminal", function()
+    PlayNotificationSound()
+    if not IsInVehicle() then
+        ShowCoolNotification("Get in a car")
+        return
+    end
+
+    local criminals = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Team then
+            local teamName = player.Team.Name:lower()
+            if teamName:find("criminal") then
+                local char = player.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    table.insert(criminals, char.HumanoidRootPart)
+                end
+            end
+        end
+    end
+
+    if #criminals > 0 then
+        local randomCriminalPart = criminals[math.random(1, #criminals)]
+        local vehiclePart = GetCurrentVehiclePartGlobal()
+        local vehicleModel = vehiclePart.Parent
+        local primaryPart = vehicleModel:IsA("Model") and (vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")) or vehiclePart
+
+        if primaryPart then
+            primaryPart.CFrame = randomCriminalPart.CFrame + Vector3.new(0, 5, 0)
+        end
+    else
+        ShowCoolNotification("No criminals found!")
+    end
+end)
+
 AddButton(VehicleTab, "Get Car", function()
     PlayNotificationSound()
     local currentTime = tick()
@@ -928,7 +1048,6 @@ AddSlider(VehicleTab, "Fly Speed", 16, 500, 50, " studs/s", function(Value)
     FlySpeed = Value
 end)
 
--- ==================== MOBILE / GUI TAB ====================
 AddSlider(GuiTab, "Dash Distance (Studs)", 5, 20, 10, " studs", function(Value)
     DashDistance = Value
 end)
@@ -967,7 +1086,6 @@ AddToggle(GuiTab, "Mobile/Movable Shoot Nearest Button", false, function(Value)
     PlayNotificationSound()
 end)
 
--- ==================== VISUALS TAB ====================
 AddToggle(VisualsTab, "Team ESP (Criminals/Guards/Inmates)", false, function(Value)
     ESPEnabled = Value
     PlayNotificationSound()
@@ -985,7 +1103,6 @@ AddToggle(VisualsTab, "Team ESP (Criminals/Guards/Inmates)", false, function(Val
     end
 end)
 
--- ==================== SETTINGS TAB ====================
 AddButton(SettingsTab, "Menu Size: Normal (580x420)", function()
     PlayNotificationSound()
     CurrentSize = "Normal"
@@ -1056,7 +1173,6 @@ AddToggle(SettingsTab, "Notification Sound", true, function(Value)
     PlayNotificationSound()
 end)
 
--- Rainbow effect loop
 task.spawn(function()
     while true do
         if RainbowEnabled then
@@ -1071,34 +1187,6 @@ task.spawn(function()
     end
 end)
 
-local function GetCurrentVehiclePartGlobal()
-    local char = LocalPlayer.Character
-    if not char then return nil end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if humanoid and humanoid.SeatPart then
-        return humanoid.SeatPart
-    end
-    local rootPart = char:FindFirstChild("HumanoidRootPart")
-    if rootPart then
-        for _, child in ipairs(rootPart:GetChildren()) do
-            if child:IsA("Weld") or child:IsA("WeldConstraint") or child:IsA("Motor6D") then
-                local part0 = child.Part0
-                local part1 = child.Part1
-                local otherPart = (part0 == rootPart) and part1 or part0
-                if otherPart and otherPart.Parent and (otherPart.Parent:FindFirstChildOfClass("VehicleSeat") or otherPart.Parent:FindFirstChildOfClass("Seat") or otherPart:IsA("VehicleSeat") or otherPart:IsA("Seat")) then
-                    return otherPart
-                end
-            end
-        end
-    end
-    return nil
-end
-
-local function IsInVehicle()
-    return GetCurrentVehiclePartGlobal() ~= nil
-end
-
--- Dash GUI Setup
 DashGui = Instance.new("ScreenGui")
 DashGui.Name = "PrisonHubDashGui"
 DashGui.Parent = CoreGui
@@ -1124,7 +1212,6 @@ UIStrokeDash.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeDash.Thickness = 3
 UIStrokeDash.Parent = DashButton
 
--- Glitch GUI Setup
 GlitchGui = Instance.new("ScreenGui")
 GlitchGui.Name = "PrisonHubGlitchGui"
 GlitchGui.Parent = CoreGui
@@ -1150,7 +1237,6 @@ UIStrokeGlitch.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeGlitch.Thickness = 3
 UIStrokeGlitch.Parent = GlitchButton
 
--- Taser GUI Setup
 TaserGui = Instance.new("ScreenGui")
 TaserGui.Name = "PrisonHubTaserGui"
 TaserGui.Parent = CoreGui
@@ -1176,7 +1262,6 @@ UIStrokeTaser.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeTaser.Thickness = 3
 UIStrokeTaser.Parent = TaserButton
 
--- Arrest GUI Setup
 ArrestGui = Instance.new("ScreenGui")
 ArrestGui.Name = "PrisonHubArrestGui"
 ArrestGui.Parent = CoreGui
@@ -1202,7 +1287,6 @@ UIStrokeArrest.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeArrest.Thickness = 3
 UIStrokeArrest.Parent = ArrestButton
 
--- Buffed Taser & Arrest GUI Setup
 BuffedTaserGui = Instance.new("ScreenGui")
 BuffedTaserGui.Name = "PrisonHubBuffedTaserGui"
 BuffedTaserGui.Parent = CoreGui
@@ -1228,7 +1312,6 @@ UIStrokeBuffedTaser.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeBuffedTaser.Thickness = 3
 UIStrokeBuffedTaser.Parent = BuffedTaserButton
 
--- Shoot Nearest GUI Setup (SHOOT - Equips MP5)
 ShootGui = Instance.new("ScreenGui")
 ShootGui.Name = "PrisonHubShootGui"
 ShootGui.Parent = CoreGui
@@ -1254,7 +1337,6 @@ UIStrokeShoot.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeShoot.Thickness = 3
 UIStrokeShoot.Parent = ShootButton
 
--- Dragging logic for mobile buttons
 MakeDraggable(DashButton)
 MakeDraggable(GlitchButton)
 MakeDraggable(TaserButton)
@@ -1262,8 +1344,6 @@ MakeDraggable(ArrestButton)
 MakeDraggable(BuffedTaserButton)
 MakeDraggable(ShootButton)
 
--- Dash execution function
-local isDashing = false
 DashButton.MouseButton1Click:Connect(function()
     if isDashing or IsInVehicle() then return end
     local char = LocalPlayer.Character
@@ -1282,8 +1362,6 @@ DashButton.MouseButton1Click:Connect(function()
     end)
 end)
 
--- Glitch execution function
-local isGlitching = false
 GlitchButton.MouseButton1Click:Connect(function()
     if isGlitching or IsInVehicle() then return end
     local currentTime = tick()
@@ -1364,13 +1442,12 @@ local function CanTargetByRankFull(localPlayer, targetPlayer)
     if targetTeam:find("inmate") and HasIgnoredItem(targetPlayer) then
         return false
     end
-    if localTeam:find("guard") and targetTeam:find("inmate") and GetEquippedWeaponName(targetPlayer) == nil then
+    if localTeam:find("guard") and targetTeam:find("inmate" ) and GetEquippedWeaponName(targetPlayer) == nil then
         return false
     end
     return true
 end
 
--- Wall Check Utility Helper Function
 local function IsVisible(targetPart)
     local origin = Camera.CFrame.Position
     local direction = (targetPart.Position - origin)
@@ -1458,16 +1535,30 @@ local function GetNearestPlayerForArrest()
     return nearestPlayer
 end
 
-local function GetNearestCriminalWithin350()
+local function GetNearestTargetForAutoShootWithin350()
     local nearestPlayer = nil
     local shortestDistance = 350
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     
+    local localTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
+    
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and IsAlive(player) then
             local teamName = player.Team and player.Team.Name:lower() or ""
-            if teamName:find("criminal") then
+            local shouldTarget = false
+            
+            if localTeam:find("criminal") or localTeam:find("inmate") then
+                if teamName:find("guard") then
+                    shouldTarget = true
+                end
+            else
+                if teamName:find("criminal") then
+                    shouldTarget = true
+                end
+            end
+            
+            if shouldTarget then
                 local enemyRoot = player.Character:FindFirstChild("HumanoidRootPart")
                 if enemyRoot then
                     local distance = (localRoot.Position - enemyRoot.Position).Magnitude
@@ -1514,7 +1605,6 @@ local function SingleTaserShot()
     local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not targetHead or not targetRoot then return end
     
-    -- Wall check applied here
     if not IsVisible(targetHead) then return end
     
     local char = LocalPlayer.Character
@@ -1561,15 +1651,13 @@ TaserButton.MouseButton1Click:Connect(function()
     task.spawn(SingleTaserShot)
 end)
 
--- Shoot Nearest Person Action (Equips MP5 and Shoots with Wallcheck)
 local function ShootNearestPersonAction()
     if IsInVehicle() then return end
-    local targetPlayer = GetNearestCriminalWithin350()
+    local targetPlayer = GetNearestTargetForAutoShootWithin350()
     if not targetPlayer or not targetPlayer.Character then return end
     local targetHead = targetPlayer.Character:FindFirstChild("Head")
     if not targetHead then return end
 
-    -- Wall check applied here
     if not IsVisible(targetHead) then return end
 
     local char = LocalPlayer.Character
@@ -1756,13 +1844,51 @@ local function HasWeaponInInventoryOrCharacter(weaponName)
     return false
 end
 
+-- VERBETERDE AUTO WEAPONS LOGICA (Blijft continu controleren op teamwissels / arrestaties)
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
             local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
             local isCriminal = currentTeam:find("criminal") ~= nil
             
-            if not isCriminal then
+            if isCriminal then
+                -- Check of de Criminal al een AK-47 heeft
+                local hasAK47 = HasWeaponInInventoryOrCharacter("AK-47")
+                
+                if not hasAK47 then
+                    local char = LocalPlayer.Character
+                    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                    
+                    if rootPart then
+                        local oldCFrame = rootPart.CFrame
+                        rootPart.CFrame = CFrame.new(-976, 109, 2054) -- Locatie van AK-47 giver
+                        task.wait(0.4)
+                        
+                        pcall(function()
+                            local akArgs = {
+                                Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("AK-47"):WaitForChild("Meshes/AK47_2")
+                            }
+                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(akArgs))
+                        end)
+                        task.wait(0.3)
+                        
+                        rootPart.CFrame = oldCFrame
+                    end
+                end
+                
+                -- Equipeer AK-47 als deze in de backpack zit
+                local char = LocalPlayer.Character
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+                local akTool = char and char:FindFirstChild("AK-47") or (backpack and backpack:FindFirstChild("AK-47"))
+                
+                if akTool and humanoid and char:FindFirstChildOfClass("Tool") ~= akTool then
+                    pcall(function()
+                        humanoid:EquipTool(akTool)
+                    end)
+                end
+            else
+                -- Als je een Guard of Inmate bent (bijv. na gearresteerd te zijn)
                 local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
                 local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
                 
@@ -1800,7 +1926,7 @@ task.spawn(function()
                 end
             end
         end
-        task.wait(2)
+        task.wait(2) -- Blijft elke 2 seconden controleren of je team is veranderd of dat je wapens mist
     end
 end)
 
@@ -1820,14 +1946,12 @@ task.spawn(function()
     end
 end)
 
--- Dedicated Aimlock Tracking / Target Death Detector Variables
 local currentTargetPlayer = nil
 
--- Separate background loop that fires FuncReload exactly every 5 seconds when Aimlock or Auto Shoot is active
 task.spawn(function()
     while true do
         task.wait(5)
-        if AimlockEnabled or AutoShootCriminalsEnabled or AutoShootEnabled then
+        if AimlockEnabled or AutoShootTargetsEnabled or AutoShootEnabled then
             pcall(function()
                 game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
             end)
@@ -1860,26 +1984,28 @@ RunService.RenderStepped:Connect(function()
             end
         end
 
-        if AutoShootCriminalsEnabled then
+        if AutoShootTargetsEnabled then
             local currentTime = tick()
-            if currentTime - lastAutoShootCriminalsTime >= 0.15 then
-                lastAutoShootCriminalsTime = currentTime
-                local targetPlayer = GetNearestCriminalWithin350()
+            if currentTime - lastAutoShootTargetsTime >= 0.15 then
+                lastAutoShootTargetsTime = currentTime
+                local targetPlayer = GetNearestTargetForAutoShootWithin350()
                 if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
                     local targetHead = targetPlayer.Character.Head
                     
-                    -- Constant wall check validation loop before firing remote
                     if IsVisible(targetHead) then
                         local char = LocalPlayer.Character
                         if char and localRoot then
                             local humanoid = char:FindFirstChildOfClass("Humanoid")
                             local backpack = LocalPlayer:FindFirstChild("Backpack")
-                            local mp5Tool = char:FindFirstChild("MP5") or (backpack and backpack:FindFirstChild("MP5"))
+                            -- Bepaal of we AK-47 of MP5 moeten gebruiken op basis van team
+                            local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
+                            local weaponName = (currentTeam:find("criminal") ~= nil) and "AK-47" or "MP5"
+                            local weaponTool = char:FindFirstChild(weaponName) or (backpack and backpack:FindFirstChild(weaponName)) or char:FindFirstChild("MP5") or (backpack and backpack:FindFirstChild("MP5"))
                             
-                            if mp5Tool and humanoid then
+                            if weaponTool and humanoid then
                                 local currentTool = char:FindFirstChildOfClass("Tool")
-                                if currentTool ~= mp5Tool then
-                                    humanoid:EquipTool(mp5Tool)
+                                if currentTool ~= weaponTool then
+                                    humanoid:EquipTool(weaponTool)
                                 end
                                 
                                 local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
@@ -1920,7 +2046,6 @@ RunService.RenderStepped:Connect(function()
                             local targetRootPart = player.Character.HumanoidRootPart
                             local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
                             if distanceInStuds <= MaxAimlockDistance then
-                                -- Uses constant IsVisible check
                                 if IsVisible(head) then
                                     local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
                                     if onScreen then
@@ -1937,7 +2062,6 @@ RunService.RenderStepped:Connect(function()
                 end
             end
 
-            -- Target Death & Reload Trigger Handler
             if closestPlayer ~= currentTargetPlayer then
                 if currentTargetPlayer ~= nil and not IsAlive(currentTargetPlayer) then
                     pcall(function()
@@ -1957,7 +2081,6 @@ RunService.RenderStepped:Connect(function()
             if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Head") then
                 local targetHead = currentTargetPlayer.Character.Head
                 
-                -- Extra constant validation check before firing aimlock auto-shoot remote
                 if IsVisible(targetHead) then
                     Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
 
@@ -1998,7 +2121,6 @@ RunService.RenderStepped:Connect(function()
         currentTargetPlayer = nil
     end
 
-    -- Permanent ESP Loop (Runs independently every frame regardless of vehicle state or other toggles)
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             local char = player.Character
