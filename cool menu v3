@@ -653,6 +653,7 @@ local AutoShootEnabled = false
 local AutoShootTargetsEnabled = false
 local AutoWeaponsEnabled = false
 local JoystickFlyEnabled = false
+local ControllAllCarsEnabled = false -- NIEUWE VARIABELE
 local FlySpeed = 50
 local FOVRadius = 500
 local DashDistance = 10
@@ -936,6 +937,12 @@ end)
 
 AddSlider(VehicleTab, "Speed Multiplier", 10, 200, 50, " Speed", function(Value)
     speedMultiplier = Value
+end)
+
+-- NIEUWE TOGGLE VOOR "CONTROLL ALL CARS"
+AddToggle(VehicleTab, "Controll all cars", false, function(Value)
+    ControllAllCarsEnabled = Value
+    PlayNotificationSound()
 end)
 
 AddToggle(VehicleTab, "Vehicle Fly (Look to Fly Up/Down)", false, function(Value)
@@ -1940,6 +1947,29 @@ task.spawn(function()
                 local primaryPart = vehicle.PrimaryPart or vehiclePart
                 if primaryPart then
                     primaryPart.Velocity = primaryPart.CFrame.LookVector * speedMultiplier
+                end
+            end
+        end
+    end
+end)
+
+-- NIEUWE LOOP VOOR "CONTROLL ALL CARS"
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if ControllAllCarsEnabled then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("VehicleSeat") then
+                    -- Controleer of er niemand in de stoel zit
+                    if obj.Occupant == nil then
+                        local vehicleModel = obj.Parent
+                        -- Zoek de hoofdonderdeel van de auto om te bewegen
+                        local primaryPart = vehicleModel:IsA("Model") and (vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")) or obj
+                        if primaryPart then
+                            -- Laat de auto heel snel naar voren bewegen (snelheid 150)
+                            primaryPart.Velocity = primaryPart.CFrame.LookVector * 150
+                        end
+                    end
                 end
             end
         end
