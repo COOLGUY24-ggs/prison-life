@@ -653,7 +653,7 @@ local AutoShootEnabled = false
 local AutoShootTargetsEnabled = false
 local AutoWeaponsEnabled = false
 local JoystickFlyEnabled = false
-local ControllAllCarsEnabled = false -- NIEUWE VARIABELE
+local ControllAllCarsEnabled = false
 local FlySpeed = 50
 local FOVRadius = 500
 local DashDistance = 10
@@ -939,7 +939,7 @@ AddSlider(VehicleTab, "Speed Multiplier", 10, 200, 50, " Speed", function(Value)
     speedMultiplier = Value
 end)
 
--- NIEUWE TOGGLE VOOR "CONTROLL ALL CARS"
+-- CONTROLL ALL CARS (ONEINDIG VER WERKEND)
 AddToggle(VehicleTab, "Controll all cars", false, function(Value)
     ControllAllCarsEnabled = Value
     PlayNotificationSound()
@@ -1851,7 +1851,6 @@ local function HasWeaponInInventoryOrCharacter(weaponName)
     return false
 end
 
--- VERBETERDE AUTO WEAPONS LOGICA (Blijft continu controleren op teamwissels / arrestaties)
 task.spawn(function()
     while true do
         if AutoWeaponsEnabled and not IsInVehicle() then
@@ -1859,7 +1858,6 @@ task.spawn(function()
             local isCriminal = currentTeam:find("criminal") ~= nil
             
             if isCriminal then
-                -- Check of de Criminal al een AK-47 heeft
                 local hasAK47 = HasWeaponInInventoryOrCharacter("AK-47")
                 
                 if not hasAK47 then
@@ -1868,7 +1866,7 @@ task.spawn(function()
                     
                     if rootPart then
                         local oldCFrame = rootPart.CFrame
-                        rootPart.CFrame = CFrame.new(-976, 109, 2054) -- Locatie van AK-47 giver
+                        rootPart.CFrame = CFrame.new(-976, 109, 2054)
                         task.wait(0.4)
                         
                         pcall(function()
@@ -1883,7 +1881,6 @@ task.spawn(function()
                     end
                 end
                 
-                -- Equipeer AK-47 als deze in de backpack zit
                 local char = LocalPlayer.Character
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
                 local humanoid = char and char:FindFirstChildOfClass("Humanoid")
@@ -1895,7 +1892,6 @@ task.spawn(function()
                     end)
                 end
             else
-                -- Als je een Guard of Inmate bent (bijv. na gearresteerd te zijn)
                 local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
                 local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
                 
@@ -1933,7 +1929,7 @@ task.spawn(function()
                 end
             end
         end
-        task.wait(2) -- Blijft elke 2 seconden controleren of je team is veranderd of dat je wapens mist
+        task.wait(2)
     end
 end)
 
@@ -1953,20 +1949,17 @@ task.spawn(function()
     end
 end)
 
--- NIEUWE LOOP VOOR "CONTROLL ALL CARS"
+-- AANGEPASTE "CONTROLL ALL CARS" LOOP VOOR INFINITE RANGE
 task.spawn(function()
     while true do
         task.wait(0.1)
         if ControllAllCarsEnabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
                 if obj:IsA("VehicleSeat") then
-                    -- Controleer of er niemand in de stoel zit
                     if obj.Occupant == nil then
                         local vehicleModel = obj.Parent
-                        -- Zoek de hoofdonderdeel van de auto om te bewegen
                         local primaryPart = vehicleModel:IsA("Model") and (vehicleModel.PrimaryPart or vehicleModel:FindFirstChildWhichIsA("BasePart")) or obj
                         if primaryPart then
-                            -- Laat de auto heel snel naar voren bewegen (snelheid 150)
                             primaryPart.Velocity = primaryPart.CFrame.LookVector * 150
                         end
                     end
@@ -2027,7 +2020,6 @@ RunService.RenderStepped:Connect(function()
                         if char and localRoot then
                             local humanoid = char:FindFirstChildOfClass("Humanoid")
                             local backpack = LocalPlayer:FindFirstChild("Backpack")
-                            -- Bepaal of we AK-47 of MP5 moeten gebruiken op basis van team
                             local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
                             local weaponName = (currentTeam:find("criminal") ~= nil) and "AK-47" or "MP5"
                             local weaponTool = char:FindFirstChild(weaponName) or (backpack and backpack:FindFirstChild(weaponName)) or char:FindFirstChild("MP5") or (backpack and backpack:FindFirstChild("MP5"))
