@@ -1857,41 +1857,8 @@ task.spawn(function()
             local currentTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
             local isCriminal = currentTeam:find("criminal") ~= nil
             
-            if isCriminal then
-                local hasAK47 = HasWeaponInInventoryOrCharacter("AK-47")
-                
-                if not hasAK47 then
-                    local char = LocalPlayer.Character
-                    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
-                    
-                    if rootPart then
-                        local oldCFrame = rootPart.CFrame
-                        rootPart.CFrame = CFrame.new(-976, 109, 2054)
-                        task.wait(0.4)
-                        
-                        pcall(function()
-                            local akArgs = {
-                                Workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("AK-47"):WaitForChild("Meshes/AK47_2")
-                            }
-                            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("InteractWithItem"):InvokeServer(unpack(akArgs))
-                        end)
-                        task.wait(0.3)
-                        
-                        rootPart.CFrame = oldCFrame
-                    end
-                end
-                
-                local char = LocalPlayer.Character
-                local backpack = LocalPlayer:FindFirstChild("Backpack")
-                local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-                local akTool = char and char:FindFirstChild("AK-47") or (backpack and backpack:FindFirstChild("AK-47"))
-                
-                if akTool and humanoid and char:FindFirstChildOfClass("Tool") ~= akTool then
-                    pcall(function()
-                        humanoid:EquipTool(akTool)
-                    end)
-                end
-            else
+            -- ALS JE OP CRIMINALS ZIT, DOE HEEL EVEN NIKS (SKIP DE LOOP)
+            if not isCriminal then
                 local hasRemington = HasWeaponInInventoryOrCharacter("Remington 870")
                 local hasMP5 = HasWeaponInInventoryOrCharacter("MP5")
                 
