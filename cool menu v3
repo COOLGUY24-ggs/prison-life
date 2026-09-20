@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- Name: Luaroblox_helper
--- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.6 - Fast Multi-Weapon Switch)
+-- Project: Prison Script Update (Cyberpunk Ultimate Hub v11.6 - With Friends Tab)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -56,7 +56,7 @@ ScreenGui.Name = "LuarobloxCustomHub"
 ScreenGui.Parent = CoreGui
 ScreenGui.Enabled = true
 
--- Notification GUI Setup for Cool Animation (Starts completely hidden above the screen)
+-- Notification GUI Setup
 local NotificationGui = Instance.new("ScreenGui")
 NotificationGui.Name = "PrisonHubNotificationGui"
 NotificationGui.Parent = CoreGui
@@ -139,7 +139,7 @@ MainStroke.Color = Color3.fromRGB(0, 255, 204)
 MainStroke.Thickness = 2.5
 MainStroke.Parent = MainFrame
 
--- Topbar (Title & Glowing Neon Effect)
+-- Topbar
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Size = UDim2.new(1, 0, 0, 45)
@@ -162,7 +162,7 @@ TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Text = "⚡ Luaroblox | Prison Life v11.6"
 TitleLabel.Parent = TopBar
 
--- Search Bar in Topbar
+-- Search Bar
 local SearchBox = Instance.new("TextBox")
 SearchBox.Name = "SearchBox"
 SearchBox.Size = UDim2.new(0, 140, 0, 28)
@@ -185,7 +185,7 @@ SearchStroke.Color = Color3.fromRGB(45, 45, 65)
 SearchStroke.Thickness = 1
 SearchStroke.Parent = SearchBox
 
--- Make Draggable Function
+-- Draggable Function
 local function MakeDraggable(btn)
     local dragging, dragInput, dragStart, startPos
     btn.InputBegan:Connect(function(input)
@@ -208,7 +208,7 @@ local function MakeDraggable(btn)
     end)
 end
 
--- Minimize/Toggle UI Button
+-- Toggle Button
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0, 45, 0, 45)
@@ -232,7 +232,6 @@ ToggleStroke.Parent = ToggleButton
 
 MakeDraggable(ToggleButton)
 
--- Topbar Action Buttons
 local FullscreenButton = Instance.new("TextButton")
 FullscreenButton.Name = "FullscreenButton"
 FullscreenButton.Size = UDim2.new(0, 32, 0, 32)
@@ -298,14 +297,14 @@ ToggleButton.MouseButton1Click:Connect(function()
     ToggleButton.Visible = false
 end)
 
--- Sidebar for Categories (Tabs)
+-- Sidebar
 local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Size = UDim2.new(0, 150, 1, -45)
 Sidebar.Position = UDim2.new(0, 0, 0, 45)
 Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
 Sidebar.BorderSizePixel = 0
-Sidebar.CanvasSize = UDim2.new(0, 0, 0, 350)
+Sidebar.CanvasSize = UDim2.new(0, 0, 0, 400)
 Sidebar.ScrollBarThickness = 4
 Sidebar.Parent = MainFrame
 
@@ -397,9 +396,11 @@ local function CreateCustomTab(name, iconText)
     return tabScroll
 end
 
+-- Create Tabs
 local MainTab = CreateCustomTab("Main", "⚡")
 local CombatTab = CreateCustomTab("Combat", "⚔️")
 local VehicleTab = CreateCustomTab("Vehicle", "🚗")
+local FriendsTab = CreateCustomTab("Friends", "👥")
 local GuiTab = CreateCustomTab("Mobile / GUI", "📱")
 local VisualsTab = CreateCustomTab("Visuals", "👁️")
 local SettingsTab = CreateCustomTab("Settings", "⚙️")
@@ -707,6 +708,111 @@ local function PlayNotificationSound()
     end)
 end
 
+-- ==============================================================================
+-- FRIENDS TAB IMPLEMENTATION
+-- ==============================================================================
+local function PopulateFriendsTab()
+    for _, child in ipairs(FriendsTab:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    AddButton(FriendsTab, "🔄 Refresh Friends List", function()
+        PlayNotificationSound()
+        PopulateFriendsTab()
+    end)
+
+    local friendsList = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) then
+            table.insert(friendsList, player)
+        end
+    end
+
+    if #friendsList == 0 then
+        local noFriendsLabel = Instance.new("TextLabel")
+        noFriendsLabel.Size = UDim2.new(1, -12, 0, 40)
+        noFriendsLabel.BackgroundTransparency = 1
+        noFriendsLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+        noFriendsLabel.TextSize = 13
+        noFriendsLabel.Font = Enum.Font.GothamMedium
+        noFriendsLabel.Text = "No friends currently in this server."
+        noFriendsLabel.Parent = FriendsTab
+    else
+        for _, friend in ipairs(friendsList) do
+            local friendCard = Instance.new("Frame")
+            friendCard.Size = UDim2.new(1, -12, 0, 50)
+            friendCard.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+            friendCard.Parent = FriendsTab
+
+            local cardCorner = Instance.new("UICorner")
+            cardCorner.CornerRadius = UDim.new(0, 10)
+            cardCorner.Parent = friendCard
+
+            local cardStroke = Instance.new("UIStroke")
+            cardStroke.Color = Color3.fromRGB(45, 45, 65)
+            cardStroke.Thickness = 1
+            cardStroke.Parent = friendCard
+
+            local friendName = Instance.new("TextLabel")
+            friendName.Size = UDim2.new(0.6, -10, 1, 0)
+            friendName.Position = UDim2.new(0, 15, 0, 0)
+            friendName.BackgroundTransparency = 1
+            friendName.TextColor3 = Color3.fromRGB(240, 240, 255)
+            friendName.TextSize = 13
+            friendName.Font = Enum.Font.GothamBold
+            friendName.TextXAlignment = Enum.TextXAlignment.Left
+            friendName.Text = "👤 " .. friend.DisplayName .. " (@" .. friend.Name .. ")"
+            friendName.Parent = friendCard
+
+            local tpBtn = Instance.new("TextButton")
+            tpBtn.Size = UDim2.new(0.35, 0, 0, 32)
+            tpBtn.Position = UDim2.new(0.62, 0, 0.5, -16)
+            tpBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 204)
+            tpBtn.TextColor3 = Color3.fromRGB(15, 15, 22)
+            tpBtn.TextSize = 12
+            tpBtn.Font = Enum.Font.GothamBold
+            tpBtn.Text = "Teleport"
+            tpBtn.Parent = friendCard
+
+            local tpCorner = Instance.new("UICorner")
+            tpCorner.CornerRadius = UDim.new(0, 8)
+            tpCorner.Parent = tpBtn
+
+            tpBtn.MouseButton1Click:Connect(function()
+                PlayNotificationSound()
+                local friendChar = friend.Character
+                local localChar = LocalPlayer.Character
+                if friendChar and localChar then
+                    local friendRoot = friendChar:FindFirstChild("HumanoidRootPart")
+                    local localRoot = localChar:FindFirstChild("HumanoidRootPart")
+                    if friendRoot and localRoot then
+                        localRoot.CFrame = friendRoot.CFrame + Vector3.new(0, 3, 0)
+                    end
+                else
+                    ShowCoolNotification("Friend character not available!")
+                end
+            end)
+        end
+    end
+end
+
+PopulateFriendsTab()
+
+Players.PlayerAdded:Connect(function(player)
+    if LocalPlayer:IsFriendsWith(player.UserId) then
+        PopulateFriendsTab()
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if LocalPlayer:IsFriendsWith(player.UserId) then
+        PopulateFriendsTab()
+    end
+end)
+
+-- Main Controls
 AddToggle(MainTab, "Auto Get Weapons", false, function(Value)
     AutoWeaponsEnabled = Value
     PlayNotificationSound()
@@ -1351,7 +1457,6 @@ UIStrokeShoot.Color = Color3.fromRGB(255, 255, 255)
 UIStrokeShoot.Thickness = 3
 UIStrokeShoot.Parent = ShootButton
 
--- Quick Switch GUI Setup
 QuickSwitchGui = Instance.new("ScreenGui")
 QuickSwitchGui.Name = "PrisonHubQuickSwitchGui"
 QuickSwitchGui.Parent = CoreGui
@@ -1385,7 +1490,6 @@ MakeDraggable(BuffedTaserButton)
 MakeDraggable(ShootButton)
 MakeDraggable(QuickSwitchButton)
 
--- Quick Switch Button Logic (Toggle ON/OFF)
 QuickSwitchButton.MouseButton1Click:Connect(function()
     QuickSwitchEnabled = not QuickSwitchEnabled
     if QuickSwitchEnabled then
@@ -1443,7 +1547,7 @@ local function IsVisible(targetPart)
     return true
 end
 
--- Quick Switch Loop Handler (Cycles through all weapons and shoots super fast)
+-- Quick Switch Loop
 task.spawn(function()
     while true do
         task.wait(0.05)
@@ -2028,8 +2132,6 @@ task.spawn(function()
     end
 end)
 
-local currentTargetPlayer = nil
-
 task.spawn(function()
     while true do
         task.wait(3)
@@ -2052,229 +2154,61 @@ RunService.RenderStepped:Connect(function()
             local currentTime = tick()
             if currentTime - lastMeleeTime >= 0.2 then
                 lastMeleeTime = currentTime
-                local nearestTarget = GetNearestPlayerForMelee()
-                if nearestTarget then
-                    pcall(function()
-                        local meleeArgs = {
-                            nearestTarget,
-                            1,
-                            1
-                        }
-                        ReplicatedStorage:WaitForChild("meleeEvent"):FireServer(unpack(meleeArgs))
-                    end)
+                local target = GetNearestPlayerForMelee()
+                if target and target.Character then
+                    local meleeRemotes = ReplicatedStorage:FindFirstChild("meleeEvent")
+                    if meleeRemotes then
+                        pcall(function()
+                            meleeRemotes:FireServer(target)
+                        end)
+                    end
                 end
+            end
+        end
+
+        if AutoShootEnabled then
+            local currentTime = tick()
+            if currentTime - lastAutoShootTime >= 0.15 then
+                lastAutoShootTime = currentTime
+                SingleTaserShot()
+                SingleArrestAction()
             end
         end
 
         if AutoShootTargetsEnabled then
             local currentTime = tick()
-            if currentTime - lastAutoShootTargetsTime >= 0.05 then
+            if currentTime - lastAutoShootTargetsTime >= 0.08 then
                 lastAutoShootTargetsTime = currentTime
-                local targetPlayer = GetNearestTargetForAutoShootWithin350()
-                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-                    local targetHead = targetPlayer.Character.Head
-                    
-                    if IsVisible(targetHead) then
-                        local char = LocalPlayer.Character
-                        if char and localRoot then
-                            local humanoid = char:FindFirstChildOfClass("Humanoid")
-                            local backpack = LocalPlayer:FindFirstChild("Backpack")
-                            
-                            local weaponChoices = {"MP5", "Remington 870", "AK-47", "M9"}
-                            local weaponTool = nil
-                            for _, name in ipairs(weaponChoices) do
-                                local tool = char:FindFirstChild(name) or (backpack and backpack:FindFirstChild(name))
-                                if tool then
-                                    weaponTool = tool
-                                    break
-                                end
-                            end
-                            
-                            if weaponTool and humanoid then
-                                local currentTool = char:FindFirstChildOfClass("Tool")
-                                if currentTool ~= weaponTool then
-                                    humanoid:EquipTool(weaponTool)
-                                end
-                                
-                                local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
-                                if gunRemotes then
-                                    local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
-                                    if shootEvent then
-                                        local shootArgs = {
-                                            {
-                                                {
-                                                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-                                                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-                                                    targetHead
-                                                }
-                                            }
-                                        }
-                                        pcall(function()
-                                            shootEvent:FireServer(unpack(shootArgs))
-                                        end)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
+                ShootNearestPersonAction()
             end
         end
-
-        if AimlockEnabled then
-            local closestPlayer = nil
-            local shortestDistance = FOVRadius
-
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and IsAlive(player) and player.Character:FindFirstChild("Head") then
-                    if CanTargetByRankFull(LocalPlayer, player) then
-                        local head = player.Character.Head
-                        
-                        if localRoot and player.Character:FindFirstChild("HumanoidRootPart") then
-                            local targetRootPart = player.Character.HumanoidRootPart
-                            local distanceInStuds = (localRoot.Position - targetRootPart.Position).Magnitude
-                            if distanceInStuds <= MaxAimlockDistance then
-                                if IsVisible(head) then
-                                    local screenPoint, onScreen = Camera:WorldToViewportPoint(head.Position)
-                                    if onScreen then
-                                        local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
-                                        if distance < shortestDistance then
-                                            shortestDistance = distance
-                                            closestPlayer = player
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-
-            if closestPlayer ~= currentTargetPlayer then
-                if currentTargetPlayer ~= nil and not IsAlive(currentTargetPlayer) then
-                    pcall(function()
-                        game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
-                    end)
-                end
-                currentTargetPlayer = closestPlayer
-            end
-
-            if currentTargetPlayer and not IsAlive(currentTargetPlayer) then
-                pcall(function()
-                    game:GetService("ReplicatedStorage"):WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
-                end)
-                currentTargetPlayer = nil
-            end
-
-            if currentTargetPlayer and currentTargetPlayer.Character and currentTargetPlayer.Character:FindFirstChild("Head") then
-                local targetHead = currentTargetPlayer.Character.Head
-                
-                if IsVisible(targetHead) then
-                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position)
-
-                    local currentTime = tick()
-                    if currentTime - lastAutoShootTime >= 0.05 then
-                        lastAutoShootTime = currentTime
-
-                        local char = LocalPlayer.Character
-                        if char then
-                            local currentTool = char:FindFirstChildOfClass("Tool")
-                            local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
-                            
-                            if currentTool and gunRemotes then
-                                local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
-                                if shootEvent then
-                                    local shootArgs = {
-                                        {
-                                            {
-                                                vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
-                                                vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
-                                                targetHead
-                                            }
-                                        }
-                                    }
-                                    pcall(function()
-                                        shootEvent:FireServer(unpack(shootArgs))
-                                    end)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        else
-            currentTargetPlayer = nil
-        end
-    else
-        currentTargetPlayer = nil
     end
 
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local char = player.Character
-            if ESPEnabled and IsAlive(player) and char then
-                local head = char:FindFirstChild("Head")
-                local highlight = char:FindFirstChild("TeamHighlight")
-                local weaponName = GetEquippedWeaponName(player)
-                local teamName = player.Team and player.Team.Name or ""
-                local isCriminal = teamName:lower():find("criminal") ~= nil
-
+    if ESPEnabled then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and IsAlive(player) then
+                local highlight = player.Character:FindFirstChild("TeamHighlight")
                 if not highlight then
                     highlight = Instance.new("Highlight")
                     highlight.Name = "TeamHighlight"
-                    highlight.Adornee = char
-                    highlight.Parent = char
-                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0.2
+                    highlight.Parent = player.Character
                 end
                 
-                if isCriminal then
-                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                elseif teamName:lower():find("guard") then
-                    highlight.FillColor = Color3.fromRGB(0, 0, 255)
-                elseif teamName:lower():find("inmate") then
-                    highlight.FillColor = Color3.fromRGB(255, 165, 0)
+                local teamName = player.Team and player.Team.Name:lower() or ""
+                if teamName:find("guards") or teamName:find("guard") then
+                    highlight.FillColor = Color3.fromRGB(0, 120, 255)
+                    highlight.OutlineColor = Color3.fromRGB(0, 200, 255)
+                elseif teamName:find("inmates") or teamName:find("inmate") then
+                    highlight.FillColor = Color3.fromRGB(255, 140, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 180, 0)
+                elseif teamName:find("criminals") or teamName:find("criminal") then
+                    highlight.FillColor = Color3.fromRGB(255, 30, 30)
+                    highlight.OutlineColor = Color3.fromRGB(255, 80, 80)
                 else
-                    highlight.FillColor = Color3.fromRGB(255, 255, 255)
-                end
-
-                if head then
-                    local billboard = head:FindFirstChild("WeaponTag")
-                    if weaponName and not isCriminal then
-                        if not billboard then
-                            billboard = Instance.new("BillboardGui")
-                            billboard.Name = "WeaponTag"
-                            billboard.Size = UDim2.new(0, 200, 0, 50)
-                            billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-                            billboard.AlwaysOnTop = true
-                            billboard.Parent = head
-
-                            local textLabel = Instance.new("TextLabel")
-                            textLabel.Name = "Text"
-                            textLabel.Size = UDim2.new(1, 0, 1, 0)
-                            textLabel.BackgroundTransparency = 1
-                            textLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
-                            textLabel.TextStrokeTransparency = 0
-                            textLabel.TextSize = 14
-                            textLabel.Font = Enum.Font.SourceSansBold
-                            textLabel.Parent = billboard
-                        end
-                        billboard.Text.Text = "Weapon: " .. weaponName
-                        billboard.Enabled = true
-                    else
-                        if billboard then
-                            billboard.Enabled = false
-                        end
-                    end
-                end
-            else
-                if char then
-                    if char:FindFirstChild("TeamHighlight") then
-                        char.TeamHighlight:Destroy()
-                    end
-                    local head = char:FindFirstChild("Head")
-                    if head and head:FindFirstChild("WeaponTag") then
-                        head.WeaponTag:Destroy()
-                    end
+                    highlight.FillColor = Color3.fromRGB(200, 200, 200)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                 end
             end
         end
