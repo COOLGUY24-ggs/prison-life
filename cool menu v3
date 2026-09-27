@@ -1925,6 +1925,73 @@ ShootButton.MouseButton1Click:Connect(function()
     task.spawn(ShootNearestPersonAction)
 end)
 
+local function AutoTaserAndSpamArrestAction()
+    if IsInVehicle() then return end
+    local targetPlayer = GetNearestPlayerForSimpleTaser()
+    if not targetPlayer or not targetPlayer.Character then return end
+    local targetHead = targetPlayer.Character:FindFirstChild("Head")
+    if not targetHead or not IsVisible(targetHead) then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    local localRoot = char:FindFirstChild("HumanoidRootPart")
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if not humanoid or not localRoot or not backpack then return end
+
+    -- 1. Equip Taser and fire
+    local taserTool = char:FindFirstChild("Taser") or backpack:FindFirstChild("Taser")
+    if taserTool then
+        if char:FindFirstChildOfClass("Tool") ~= taserTool then
+            humanoid:EquipTool(taserTool)
+            task.wait(0.05)
+        end
+        local shootArgs = {
+            {
+                {
+                    vector.create(localRoot.Position.X, localRoot.Position.Y, localRoot.Position.Z),
+                    vector.create(targetHead.Position.X, targetHead.Position.Y, targetHead.Position.Z),
+                    targetHead
+                }
+            }
+        }
+        local gunRemotes = ReplicatedStorage:FindFirstChild("GunRemotes")
+        if gunRemotes then
+            local shootEvent = gunRemotes:FindFirstChild("ShootEvent")
+            if shootEvent then
+                pcall(function()
+                    shootEvent:FireServer(unpack(shootArgs))
+                end)
+            end
+        end
+    end
+
+    -- 2. Send FuncReload remote as requested (before switching to handcuffs)
+    pcall(function()
+        ReplicatedStorage:WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+    end)
+    task.wait(0.05)
+
+    -- 3. Equip Handcuffs and spam arrest
+    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+    if handcuffsTool then
+        if char:FindFirstChildOfClass("Tool") ~= handcuffsTool then
+            humanoid:EquipTool(handcuffsTool)
+            task.wait(0.05)
+        end
+        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+        if arrestEvent then
+            for i = 1, 5 do
+                if not IsAlive(targetPlayer) then break end
+                pcall(function()
+                    arrestEvent:InvokeServer(targetPlayer, 1)
+                end)
+                task.wait(0.05)
+            end
+        end
+    end
+end
+
 local function BuffedTaserAndArrestAction()
     local currentTime = tick()
     if isBuffedTaserRunning or IsInVehicle() or (currentTime - lastBuffedTaserTime < BuffedTaserCooldown) then return end
@@ -1976,6 +2043,13 @@ local function BuffedTaserAndArrestAction()
         task.wait(0.05)
     end
     humanoid:MoveTo(localRoot.Position)
+    
+    -- Send FuncReload before handcuffs as requested
+    pcall(function()
+        ReplicatedStorage:WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
+    end)
+    task.wait(0.05)
+
     local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
     if handcuffsTool then
         humanoid:EquipTool(handcuffsTool)
@@ -2162,8 +2236,7 @@ RunService.RenderStepped:Connect(function()
             local currentTime = tick()
             if currentTime - lastAutoShootTime >= 0.15 then
                 lastAutoShootTime = currentTime
-                SingleTaserShot()
-                SingleArrestAction()
+                AutoTaserAndSpamArrestAction()
             end
         end
         if AutoShootTargetsEnabled then
