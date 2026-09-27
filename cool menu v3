@@ -1618,7 +1618,7 @@ task.spawn(function()
                         end
                     end
                     if targetHead then
-                        local weaponsToCheck = {"MP5", "Remington 870", "AK-47", "M9"}
+                        local weaponsToCheck = {"MP5", "AK-47", "Remington 870", "M9"}
                         for _, weaponName in ipairs(weaponsToCheck) do
                             if not QuickSwitchEnabled then break end
                             local weaponTool = char:FindFirstChild(weaponName) or backpack:FindFirstChild(weaponName)
@@ -1886,7 +1886,9 @@ local function ShootNearestPersonAction()
     if not humanoid or not localRoot then return end
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not backpack then return end
-    local weaponChoices = {"MP5", "Remington 870", "AK-47", "M9"}
+    
+    -- PRIORITEIT: Kies eerst AK-47, zo niet aanwezig/gevonden dan wordt Remington 870 of andere opties gekozen
+    local weaponChoices = {"AK-47", "Remington 870", "MP5", "M9"}
     local chosenWeapon = nil
     for _, name in ipairs(weaponChoices) do
         local tool = char:FindFirstChild(name) or backpack:FindFirstChild(name)
@@ -2288,7 +2290,7 @@ RunService.RenderStepped:Connect(function()
                     espTag.Name = "FriendEspTag"
                     espTag.Size = UDim2.new(0, 100, 0, 40)
                     espTag.StudsOffset = Vector3.new(0, 2.5, 0)
-                    espTag.AlwaysOnTop = true
+                    espTag.AlwaysOnTop = True
                     espTag.Parent = head
 
                     local textLabel = Instance.new("TextLabel")
