@@ -1974,7 +1974,7 @@ local function ShootNearestPersonAction()
     if not backpack then return end
     
     -- PRIORITEIT: Kies eerst AK-47, zo niet aanwezig/gevonden dan wordt Remington 870 of andere opties gekozen
-    local weaponChoices = {"AK-47", "MP5", "Remington 870", "M9"}
+    local weaponChoices = {"M4A1", "AK-47", "MP5", "Remington 870", "M9"}
     local chosenWeapon = nil
     for _, name in ipairs(weaponChoices) do
         local tool = char:FindFirstChild(name) or backpack:FindFirstChild(name)
