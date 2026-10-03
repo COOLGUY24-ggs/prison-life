@@ -624,7 +624,6 @@ end
 -- Variables
 local AntiTazeEnabled = true
 local AntiLagEnabled = false
-local AimlockEnabled = false
 local TeamCheckEnabled = true
 local ESPEnabled = false
 local FriendESPEnabled = false
@@ -823,17 +822,6 @@ end)
 AddToggle(MainTab, "Team Check (Smart Rank Filter)", true, function(Value)
     TeamCheckEnabled = Value
     PlayNotificationSound()
-end)
-
-AddToggle(CombatTab, "Aimlock Mouse Circle (FOV)", false, function(Value)
-    AimlockEnabled = Value
-    fovCircle.Visible = Value
-    PlayNotificationSound()
-end)
-
-AddSlider(CombatTab, "Circle Size", 100, 2000, 500, "px", function(Value)
-    FOVRadius = Value
-    fovCircle.Radius = Value
 end)
 
 AddToggle(CombatTab, "Auto Melee Nearest (20 Studs)", false, function(Value)
@@ -1521,82 +1509,6 @@ local function IsVisible(targetPart)
     return true
 end
 
--- ==============================================================================
--- AIMLOCK LOGICA MET TEAM & MUURCHECK (WALLCHECK)
--- ==============================================================================
-local function HasValidWeapon(player)
-    if not player.Character then return false end
-    for _, tool in ipairs(player.Character:GetChildren()) do
-        if tool:IsA("Tool") then
-            local tName = tool.Name
-            if tName ~= "Breakfast" and tName ~= "breakfast" and
-               tName ~= "Dinner" and tName ~= "dinner" and
-               tName ~= "Soda" and tName ~= "soda" and
-               tName ~= "Chips" and tName ~= "chips" then
-                return true
-            end
-        end
-    end
-    return false
-end
-
-local function ShouldTargetPlayer(localPlayer, targetPlayer)
-    if not TeamCheckEnabled then return true end
-    local localTeam = localPlayer.Team and localPlayer.Team.Name:lower() or ""
-    local targetTeam = targetPlayer.Team and targetPlayer.Team.Name:lower() or ""
-    
-    if localTeam == targetTeam and localTeam ~= "" then
-        return false
-    end
-
-    if localTeam:find("inmate") then
-        return targetTeam:find("guard") ~= nil
-    elseif localTeam:find("criminal") then
-        return targetTeam:find("guard") ~= nil
-    elseif localTeam:find("guard") then
-        if targetTeam:find("criminal") then
-            return true
-        elseif targetTeam:find("inmate") then
-            return HasValidWeapon(targetPlayer)
-        end
-    end
-    
-    return true
-end
-
-local function GetClosestTargetInFOV()
-    local bestTarget = nil
-    local shortestDist = FOVRadius
-    local mousePos = UserInputService:GetMouseLocation()
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and IsAlive(player) then
-            if ShouldTargetPlayer(LocalPlayer, player) then
-                local char = player.Character
-                local head = char and char:FindFirstChild("Head")
-                local rootPart = char and char:FindFirstChild("HumanoidRootPart")
-                if head and rootPart then
-                    if (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                        local distToPlayer = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                        if distToPlayer <= MaxAimlockDistance then
-                            if IsVisible(head) then
-                                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                                if onScreen then
-                                    local screenDist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                                    if screenDist < shortestDist then
-                                        shortestDist = screenDist
-                                        bestTarget = head
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return bestTarget
-end
 -- ==============================================================================
 
 -- Quick Switch Loop
