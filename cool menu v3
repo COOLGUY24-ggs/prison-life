@@ -2259,7 +2259,7 @@ RunService.RenderStepped:Connect(function()
                     espTag.Name = "FriendEspTag"
                     espTag.Size = UDim2.new(0, 100, 0, 40)
                     espTag.StudsOffset = Vector3.new(0, 2.5, 0)
-                    espTag.AlwaysOnTop = True
+                    espTag.AlwaysOnTop = true -- Gefixt: kleine letter 't' maakt het zichtbaar door muren
                     espTag.Parent = head
 
                     local textLabel = Instance.new("TextLabel")
