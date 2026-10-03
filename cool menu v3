@@ -651,6 +651,7 @@ local function AddSlider(parent, text, min, max, default, suffix, callback)
 end
 
 -- Variables
+local AntiTazeEnabled = true
 local AntiLagEnabled = false
 local AimlockEnabled = false
 local TeamCheckEnabled = true
@@ -1788,6 +1789,26 @@ AddToggle(CombatTab, "Anti Lag / FPS Boost", false, function(Value)
             ShowCoolNotification("Anti Lag Disabled!")
         end
     end)
+end)
+
+AddToggle(CombatTab, "Anti taze", false, function(Value)
+    AntiTazeEnabled = Value
+    PlayNotificationSound()
+    
+    if AntiTazeEnabled then
+        disableTazeConnection()
+        ShowCoolNotification("Anti Taze Enabled!")
+    else
+        pcall(function()
+            local gunRemotes = game:GetService("ReplicatedStorage"):FindFirstChild("GunRemotes")
+            if gunRemotes and gunRemotes:FindFirstChild("PlayerTased") then
+                for _, connection in pairs(getconnections(gunRemotes.PlayerTased.OnClientEvent)) do
+                    connection:Enable()
+                end
+            end
+        end)
+        ShowCoolNotification("Anti Taze Disabled!")
+    end
 end)
 
 local function GetNearestPlayerForSimpleTaser()
