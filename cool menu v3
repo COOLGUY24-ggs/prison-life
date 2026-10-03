@@ -2006,86 +2006,155 @@ local function AutoTaserAndSpamArrestAction()
     end
 end
 
+-- Maak of koppel je return/cancel knop (pas de naam eventueel aan naar jouw UI)
+local CancelButton = BuffedTaserButton.Parent:FindFirstChild("CancelBuffedTaserButton") -- Of jouw specifieke knop
+
+-- Variabele om bij te houden of de actie handmatig gestopt moet worden
+local cancelRequested = false
+
+if CancelButton then
+    CancelButton.MouseButton1Click:Connect(function()
+        if isBuffedTaserRunning then
+            cancelRequested = true
+        end
+    end)
+end
+
 local function BuffedTaserAndArrestAction()
     local currentTime = tick()
     if isBuffedTaserRunning or IsInVehicle() or (currentTime - lastBuffedTaserTime < BuffedTaserCooldown) then return end
+    
     isBuffedTaserRunning = true
+    cancelRequested = false
     lastBuffedTaserTime = currentTime
+
+    -- Toon de terugknop als je UI die heeft
+    if CancelButton then
+        CancelButton.Visible = true
+    end
+
     local targetPlayer = GetValidTargetForBuffedTaser()
     if not targetPlayer or not targetPlayer.Character then
         isBuffedTaserRunning = false
+        if CancelButton then CancelButton.Visible = false end
         return
     end
+
     local targetRoot = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not targetRoot then
         isBuffedTaserRunning = false
+        if CancelButton then CancelButton.Visible = false end
         return
     end
+
     local char = LocalPlayer.Character
     if not char then
         isBuffedTaserRunning = false
+        if CancelButton then CancelButton.Visible = false end
         return
     end
+
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     local localRoot = char:FindFirstChild("HumanoidRootPart")
     if not humanoid or not localRoot then
         isBuffedTaserRunning = false
+        if CancelButton then CancelButton.Visible = false end
         return
     end
+
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if not backpack then
         isBuffedTaserRunning = false
+        if CancelButton then CancelButton.Visible = false end
         return
     end
+
     local oldCFrame = localRoot.CFrame
-    humanoid.WalkSpeed = 24
+    
+    -- Snelheid instellen op 32
+    humanoid.WalkSpeed = 32
+
+    -- Teleporteer naar de verwachte positie van het doelwit
     local targetVelocity = targetRoot.Velocity
     local predictedPosition = targetRoot.Position + (targetVelocity * 0.25)
     localRoot.CFrame = CFrame.new(predictedPosition - (targetRoot.CFrame.LookVector * 4) + Vector3.new(0, 3, 0), predictedPosition)
     task.wait(0.15)
-    local startTime = tick()
-    while tick() - startTime < 1.5 do
-        if not IsAlive(targetPlayer) or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            break
-        end
-        local currentEnemyRoot = targetPlayer.Character.HumanoidRootPart
-        humanoid:MoveTo(currentEnemyRoot.Position)
-        local dist = (localRoot.Position - currentEnemyRoot.Position).Magnitude
-        if dist <= 5 then
-            break
-        end
-        task.wait(0.05)
-    end
-    humanoid:MoveTo(localRoot.Position)
-    
-    -- Send FuncReload before handcuffs as requested
+
+    -- Send FuncReload
     pcall(function()
         ReplicatedStorage:WaitForChild("GunRemotes"):WaitForChild("FuncReload"):InvokeServer()
     end)
     task.wait(0.05)
 
-    local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
-    if handcuffsTool then
-        humanoid:EquipTool(handcuffsTool)
-        task.wait(0.05)
-        local arrestArgs = {
-            targetPlayer,
-            1
-        }
-        local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
-        if arrestEvent then
-            pcall(function()
-                arrestEvent:InvokeServer(unpack(arrestArgs))
-            end)
+    -- Chase & Arrest Loop
+    local startTime = tick()
+    local motionlessTimer = 0
+
+    while isBuffedTaserRunning and (tick() - startTime < 8) do
+        -- Check of de speler op de terugknop heeft geklikt
+        if cancelRequested then
+            break
         end
+
+        if not IsAlive(targetPlayer) then break end
+        
+        local enemyRoot = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not enemyRoot then break end
+
+        -- Snelheid vasthouden op 32
+        humanoid.WalkSpeed = 32
+
+        -- Blijf naar de speler toe lopen
+        humanoid:MoveTo(enemyRoot.Position)
+
+        -- Handboeien automatisch uitrusten
+        local handcuffsTool = char:FindFirstChild("Handcuffs") or backpack:FindFirstChild("Handcuffs") or char:FindFirstChild("Handcuff") or backpack:FindFirstChild("Handcuff")
+        if handcuffsTool and char:FindFirstChildOfClass("Tool") ~= handcuffsTool then
+            humanoid:EquipTool(handcuffsTool)
+        end
+
+        -- Arresteren spammen als je binnen bereik bent
+        local dist = (localRoot.Position - enemyRoot.Position).Magnitude
+        if dist <= 25 then
+            local arrestEvent = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ArrestPlayer")
+            if arrestEvent then
+                pcall(function()
+                    arrestEvent:InvokeServer(targetPlayer, 1)
+                end)
+            end
+        end
+
+        -- Controleer of de target 2 seconden stilstaat (gearresteerd)
+        if enemyRoot.Velocity.Magnitude < 0.5 then
+            motionlessTimer = motionlessTimer + 0.05
+            if motionlessTimer >= 2.0 then
+                break
+            end
+        else
+            motionlessTimer = 0
+        end
+
+        task.wait(0.05)
     end
-    task.wait(0.2)
+
+    -- Stop direct met naar de speler lopen
+    humanoid:MoveTo(localRoot.Position)
+
+    -- Terugteleporteren naar originele plek en snelheid herstellen
     pcall(function()
         localRoot.CFrame = oldCFrame
     end)
+    
     humanoid.WalkSpeed = 22
     isBuffedTaserRunning = false
+    cancelRequested = false
+
+    -- Verberg de terugknop weer
+    if CancelButton then
+        CancelButton.Visible = false
+    end
 end
+
 BuffedTaserButton.MouseButton1Click:Connect(function()
     task.spawn(BuffedTaserAndArrestAction)
 end)
