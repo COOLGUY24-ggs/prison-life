@@ -834,7 +834,7 @@ AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, functio
     PlayNotificationSound()
 end)
 
-AddToggle(CombatTab, "Auto Shoot (All Guns - 350 Studs)", false, function(Value)
+AddToggle(CombatTab, "Auto Shoot (All Guns - 900 Studs)", false, function(Value)
     AutoShootTargetsEnabled = Value
     PlayNotificationSound()
 end)
