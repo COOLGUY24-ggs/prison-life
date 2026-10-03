@@ -1650,7 +1650,7 @@ task.spawn(function()
                         end
                     end
                     if targetHead then
-                        local weaponsToCheck = {"MP5", "AK-47", "Remington 870", "M9"}
+                        local weaponsToCheck = {"MP5", "M700", "AK-47", "Remington 870", "M9"}
                         for _, weaponName in ipairs(weaponsToCheck) do
                             if not QuickSwitchEnabled then break end
                             local weaponTool = char:FindFirstChild(weaponName) or backpack:FindFirstChild(weaponName)
