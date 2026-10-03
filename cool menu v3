@@ -651,6 +651,7 @@ local function AddSlider(parent, text, min, max, default, suffix, callback)
 end
 
 -- Variables
+local AntiLagEnabled = false
 local AimlockEnabled = false
 local TeamCheckEnabled = true
 local ESPEnabled = false
@@ -866,6 +867,11 @@ end)
 AddToggle(CombatTab, "Auto Melee Nearest (20 Studs)", false, function(Value)
     AutoMeleeEnabled = Value
     PlayNotificationSound()
+end)
+
+AddToggle(CombatTab, "Anti Lag", false, function(Value)
+		AntiLagEnabled = Value
+		PlayNotificationSound()
 end)
 
 AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, function(Value)
@@ -1756,6 +1762,38 @@ local function GetNearestPlayerForMelee()
     end
     return nearestPlayer
 end
+
+AddToggle(CombatTab, "Anti Lag / FPS Boost", false, function(Value)
+    AntiLagEnabled = Value
+    PlayNotificationSound()
+    
+    pcall(function()
+        if AntiLagEnabled then
+            game:GetService("Lighting").GlobalShadows = false
+            game:GetService("Lighting").FogEnd = 9e9
+            
+            for _, v in ipairs(Workspace:GetDescendants()) do
+                if v:IsA("BasePart") and not v:IsA("MeshPart") then
+                    v.Material = Enum.Material.SmoothPlastic
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") then
+                    v.Enabled = false
+                end
+            end
+            ShowCoolNotification("Anti Lag Enabled!")
+        else
+            game:GetService("Lighting").GlobalShadows = true
+            
+            for _, v in ipairs(Workspace:GetDescendants()) do
+                if v:IsA("BasePart") and not v:IsA("MeshPart") then
+                    v.Material = Enum.Material.Plastic
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") then
+                    v.Enabled = true
+                end
+            end
+            ShowCoolNotification("Anti Lag Disabled!")
+        end
+    end)
+end)
 
 local function GetNearestPlayerForSimpleTaser()
     local nearestPlayer = nil
