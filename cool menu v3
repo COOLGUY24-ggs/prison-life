@@ -1740,7 +1740,7 @@ end
 
 local function GetNearestTargetForAutoShootWithin350()
     local nearestPlayer = nil
-    local shortestDistance = 600
+    local shortestDistance = 900
     local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not localRoot then return nil end
     local localTeam = LocalPlayer.Team and LocalPlayer.Team.Name:lower() or ""
