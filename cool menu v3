@@ -869,11 +869,6 @@ AddToggle(CombatTab, "Auto Melee Nearest (20 Studs)", false, function(Value)
     PlayNotificationSound()
 end)
 
-AddToggle(CombatTab, "Anti Lag", false, function(Value)
-		AntiLagEnabled = Value
-		PlayNotificationSound()
-end)
-
 AddToggle(CombatTab, "Auto Shoot Taser (45 Studs) & Spam Arrest", false, function(Value)
     AutoShootEnabled = Value
     PlayNotificationSound()
