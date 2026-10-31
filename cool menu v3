@@ -2331,6 +2331,126 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
+		-- ==============================================================================
+-- Floating Inventory Weapons (Fixed Model Loading & Zero Teleport/Fling)
+-- ==============================================================================
+local FloatingWeaponsEnabled = false
+local floatingWeaponsFolder = Workspace:FindFirstChild("FloatingWeaponsFolder")
+if not floatingWeaponsFolder then
+    floatingWeaponsFolder = Instance.new("Folder")
+    floatingWeaponsFolder.Name = "FloatingWeaponsFolder"
+    floatingWeaponsFolder.Parent = Workspace
+end
+
+local function cleanFloatingWeapons()
+    for _, child in ipairs(floatingWeaponsFolder:GetChildren()) do
+        child:Destroy()
+    end
+end
+
+-- Zorg dat de toggle maar één keer wordt toegevoegd
+local floatingToggleExists = false
+for _, child in ipairs(VisualsTab:GetChildren()) do
+    if child:IsA("TextButton") and child.Text:find("Floating Inventory Weapons") then
+        floatingToggleExists = true
+        break
+    end
+end
+
+if not floatingToggleExists then
+    AddToggle(VisualsTab, "Floating Inventory Weapons", false, function(Value)
+        FloatingWeaponsEnabled = Value
+        PlayNotificationSound()
+        if not Value then
+            cleanFloatingWeapons()
+        end
+    end)
+end
+
+-- Render loop met verbeterde model-loader voor alle wapentypes
+RunService.RenderStepped:Connect(function()
+    if not FloatingWeaponsEnabled then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+    local rootPart = char:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local equippedTool = char:FindFirstChildOfClass("Tool")
+    
+    local toolsToFloat = {}
+    if backpack then
+        for _, item in ipairs(backpack:GetChildren()) do
+            if item:IsA("Tool") and item ~= equippedTool then 
+                table.insert(toolsToFloat, item) 
+            end
+        end
+    end
+
+    local totalWeapons = #toolsToFloat
+    if totalWeapons == 0 then
+        cleanFloatingWeapons()
+        return
+    end
+
+    local currentWeapons = {}
+
+    for index, tool in ipairs(toolsToFloat) do
+        local weaponCloneName = "Floating_" .. tool.Name .. "_" .. tostring(index)
+        local weaponModel = floatingWeaponsFolder:FindFirstChild(weaponCloneName)
+
+        if not weaponModel then
+            weaponModel = Instance.new("Model")
+            weaponModel.Name = weaponCloneName
+            weaponModel.Parent = floatingWeaponsFolder
+
+            -- Zoek naar zowel BaseParts als MeshParts binnen het wapen
+            for _, part in ipairs(tool:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("MeshPart") then
+                    local pClone = part:Clone()
+                    pClone.Anchored = true
+                    pClone.CanCollide = false
+                    pClone.Massless = true
+                    pClone.CastShadow = false
+                    pClone.Transparency = 0
+                    
+                    -- Verwijder alle sub-objecten om physics te voorkomen
+                    for _, sub in ipairs(pClone:GetChildren()) do
+                        sub:Destroy()
+                    end
+                    pClone.Parent = weaponModel
+                end
+            end
+        end
+
+        -- Als het model door een lege tool of ontbrekende parts niet geladen kon worden, slaan we hem over
+        if #weaponModel:GetChildren() > 0 then
+            local angle = (index / totalWeapons) * (math.pi * 2) + (tick() * 1.5)
+            local radius = 3.5
+            local heightOffset = math.sin(tick() * 3 + index) * 0.4
+
+            local targetPos = rootPart.Position + Vector3.new(math.cos(angle) * radius, 2 + heightOffset, math.sin(angle) * radius)
+            local targetCFrame = CFrame.new(targetPos) * CFrame.Angles(tick() * 0.5, tick() * 0.8, 0)
+
+            for _, part in ipairs(weaponModel:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("MeshPart") then
+                    part.CFrame = targetCFrame
+                end
+            end
+        end
+        
+        currentWeapons[weaponCloneName] = true
+    end
+
+    for _, child in ipairs(floatingWeaponsFolder:GetChildren()) do
+        if not currentWeapons[child.Name] then
+            child:Destroy()
+        end
+    end
+end)
+
+
     if ESPEnabled then
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and IsAlive(player) then
